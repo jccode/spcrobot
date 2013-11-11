@@ -57,30 +57,41 @@ class SpecificationParser(object):
         """
         return map(self.getSpcid, spcids)
         
-    
-    def findSimilar(self, spcids):
+
+
+    def getExtraField(self, spcId):
         """
-        Find the spcid similar with the given spcid.
+        Get extra field for ut sql
+
+        Arguments:
+        - `self`:
+        - `spcId`:
+        """
+        mapping = {'ByLine': 'ASMLINE',
+                   'ByHead': 'UPDOWN',
+                   'ByHeadNo': 'HEADNO', 
+                   'ByCell': 'CELLID'}
+        spcItem = self.getSpcid(spcId)
+        field = ''
+        chartType = spcItem['CHART_TYPE']
+        plotUnit = spcItem['PLOT_UNIT']
+        for unit in plotUnit:
+            field += (',' + mapping[unit])
+        if chartType == 'Mean-Sigma':
+            field += ',AVG,STD'
+        return (spcItem['SPCID'], field)
+        
+
+    def getExtraFields(self, spcids):
+        """
+        Get extra fields
 
         Arguments:
         - `self`:
         - `spcids`:
         """
-        srcItems = filter(lambda item: item["SPCID"] not in spcids, self.items)
-        destItems = filter(lambda item: item["SPCID"] in spcids, self.items)
-
-        def _findSimilarOne(descItem):
-            ret1 = filter(lambda item: item["CHART_TYPE"] == descItem["CHART_TYPE"]
-                          and item["PLOT_UNIT"] == descItem["PLOT_UNIT"]
-                          and item["PROCESS_NAME"] == descItem["PROCESS_NAME"], srcItems)
-            if len(ret1) > 0:
-                ret1_1 = filter(lambda item: item["PROCESS_ID"] == descItem["PROCESS_ID"], ret1)
-                return ret1_1[0] if len(ret1_1) > 0 else ret1[0]
-            else:
-                return None
-
-        return map(_findSimilarOne, destItems)
-        
+        return map(self.getExtraField, spcids)
+    
     
     def constructItems(self):
         """
@@ -316,16 +327,18 @@ class SpecificationParser(object):
         
 if __name__ == '__main__':
 
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    # specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    # specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
+    #                    'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
 
     sp = SpecificationParser(specificationXls)
     
     # sp.constructItems()
     # print sp.getSpcid('CC1800_PR01B_01H')
     # print sp.getSpcids(['CC1800_PR01B_01H', 'ET1700_PR01A_08H'])
-    # print sp.findSimilar(['CC1800_PR01B_01H', 'ET3100_PR01B_08H'])
-    sp.listItems()
+    # print sp.getExtraField('CC1800_PR01B_01H')
+    print sp.getExtraFields(['CC1800_PR01B_01H', 'ET3100_PR01B_08H'])
+    
+    # sp.listItems()
     
 

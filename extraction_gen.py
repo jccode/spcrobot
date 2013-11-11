@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from sets import Set
 import xml.etree.ElementTree as ET
 import spec_parser as sp
 
@@ -33,28 +34,38 @@ class ExtractionGen(object):
         spcItem = self.specParser.getSpcid(spcid)
         unit = spcItem["UNIT"]
         spcidType = spcItem["SPCID_TYPE"]
-        spcSimilarItem = self.specParser.findSimilar([spcid])[0]
-        (fetcher, extractor) = self.getFetcherExtractor(spcSimilarItem["SPCID"])
+        
+        spcSimilarItem = self.findSimilar([spcid])[0]
+        if not spcSimilarItem:
+            return "********** WARNNING **********\n"\
+                "Not similar spcid found for " + spcid + "\n"
+
+        try:
+            (fetcher, extractor) = self.getFetcherExtractor(spcSimilarItem["SPCID"])
+        except Exception, e:
+            return "********** WARNNING **********\n"\
+                "Not fetcher & extractor found in extraction.xml for "\
+                + spcid + ", similar spcid is " + spcSimilarItem["SPCID"]
+            
         sourceTable = self.genSourceTable(spcItem)
         properties = ', '.join( self.getProperties(spcItem) )
         if unit == "HDD" and spcidType == "PR":
             sourceParamTable = "hdd_" + spcItem["PROCESS_ID"] + "_head"
             properties = ("sourceParamTable => '" + sourceParamTable) + "', " + properties
 
-        site = "[" + (", ".join(spcItem["SITE"])) + "]"
-        print site
-        tpl = "&write( { spcIdBase => '" + spcid[:-4] + "', "\
-              "	  freq => [ '" + spcItem["FREQUENCY"] + "' ],"\
-              "	  source => [ 'spcdcs' ],"\
-              "	  cutoff => '" + spcItem["SAMPLE_SIZE"] + "', "\
-              "	  carryOver => '" + spcItem["CARRY_OVER"] + "', "\
-              "	  modelSet => '" + spcid + "', "\
-              "	  parameterSet => '" + spcid + "', "\
-              "	  extractor => '" + extractor + "',"\
-              "	  fetcher => '" + fetcher + "',"\
-              "	  properties => { sourceTable => '" + sourceTable + "', " + properties + " },"\
-              "	  site =>" + site + ""\
-              "      });"
+        site = "[" + (", ".join(map(lambda x: "'" + x + "'" , spcItem["SITE"]))) + "]"
+        tpl = "&write( { spcIdBase => '" + spcid[:-4] + "', \n" \
+              "	  freq => [ '" + spcItem["FREQUENCY"] + "' ],\n" \
+              "	  source => [ 'spcdcs' ],\n" \
+              "	  cutoff => '" + spcItem["SAMPLE_SIZE"] + "', \n" \
+              "	  carryOver => '" + str(spcItem["CARRY_OVER"]).lower() + "', \n" \
+              "	  modelSet => '" + spcid + "', \n" \
+              "	  parameterSet => '" + spcid + "', \n" \
+              "	  extractor => '" + extractor + "',\n" \
+              "	  fetcher => '" + fetcher + "',\n" \
+              "	  properties => { sourceTable => '" + sourceTable + "', " + properties + " },\n" \
+              "	  site =>" + site + "\n" \
+              "});\n "
 
         return tpl
 
@@ -67,8 +78,75 @@ class ExtractionGen(object):
         - `self`:
         - `spcids`:
         """
-        pass
+        return map(self.generateMakeExtractionPl, spcids)
 
+
+    
+    def findSimilar(self, spcids):
+        """
+        Find the spcids similar with the given spcid.
+
+        Arguments:
+        - `self`:
+        - `spcids`:
+        
+        Return:
+        For each spcid in spcids will return a list
+        """
+        srcItems = filter(lambda item: item["SPCID"] not in spcids, self.specParser.items)
+        destItems = filter(lambda item: item["SPCID"] in spcids, self.specParser.items)
+
+        def _findSimilarOne(descItem):
+            ret1 = filter(lambda item: item["CHART_TYPE"] == descItem["CHART_TYPE"]
+                          and item["PLOT_UNIT"] == descItem["PLOT_UNIT"]
+                          and item["PROCESS_NAME"] == descItem["PROCESS_NAME"], srcItems)
+            if len(ret1) > 0:
+                ret2 = filter(lambda item: item["PROCESS_ID"] == descItem["PROCESS_ID"], ret1)
+                if len(ret2) > 0:
+                    ret2_check = filter(self._checkSpcidExistInExtractionXML, ret2)
+                    if len(ret2_check) > 0:
+                        return ret2_check[0]
+                    
+                # ret2 not in extraction.xml, so, check ret1
+                ret1_check = filter(self._checkSpcidExistInExtractionXML, ret1)
+                if len(ret1_check) > 0:
+                    return ret1_check[0]
+            else:
+                return None
+
+        return map(_findSimilarOne, destItems)
+
+    
+    def _checkSpcidExistInExtractionXML(self, spcItem):
+        """
+        Check if spcItem exist in extraction.xml
+
+        Arguments:
+        - `self`:
+        - `spcItem`:
+        """
+        if not spcItem:
+            return False
+
+        return self.checkSpcidExistInExtractionXML(spcItem["SPCID"])
+        
+
+    def checkSpcidExistInExtractionXML(self, spcid):
+        """
+        Check if spcid exist in extraction.xml
+
+        Arguments:
+        - `self`:
+        - `spcid`:
+
+        Return:
+        bool
+        """
+        if not spcid:
+            return False
+        
+        return self.root.find("./extraction[@spcId='{0}']".format(spcid)) is not None
+    
 
     def getFetcherExtractor(self, spcid):
         """
@@ -133,26 +211,29 @@ class ExtractionGen(object):
         properties = spcItem["PROPERTIES"]
         mapping = {
             "Rework": "typeOfHSA => 'NotNew'" if unit == 'HSA' else "typeOfHDE => 'NotPrime'",
-            "Prime": "typeOfHSA => 'New'" if unit == 'HSA' else "typeOfHDE => 'Prime', firstCycleOnly => 'true'",
-            "New_Only": "" if unit == 'HDD' and "Prime" in properties else "firstCycleOnly => 'true'",
+            "Prime": "typeOfHSA => 'New'" if unit == 'HSA' else ["typeOfHDE => 'Prime'", "firstCycleOnly => 'true'"],
+            "New_Only": "firstCycleOnly => 'true'",
             "Latest_Data": "latestOnly => 'true'",
             "Rework_Only": "notFirstCycleOnly => 'true'",
             "Pass_And_Fail": "passOnly => 'false'",
             "Without_HSAL": "excludeTrial => 'true'",
-            "Cycle_GT_1": "passOnly => 'false"
+            "Cycle_GT_1": "passOnly => 'false'"
         }
-        values = []
+        values = Set([])
         for p in properties:
-            values.append(mapping[p])
+            values.add(mapping[p])
         return values
 
     
 
 if __name__ == '__main__':
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
+    # specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
+    #                    'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    # extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
+    specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    extractionFile = 'extraction.xml'
     eg = ExtractionGen(specificationXls, extractionFile)
     # print eg.getFetcherExtractors(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
-    print eg.generateMakeExtractionPl('CC1700_PR02A_01H')
+    # print eg.generateMakeExtractionPl('CC1700_PR02A_01H')
+    print eg.generateMakeExtractionPls(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
 

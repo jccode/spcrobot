@@ -27,7 +27,7 @@ class SpcRobot(object):
         self.outputFile = 'out.txt'
         self.spcids = [line.strip() for line in open(spcidsFile)]
         self.specParser = sp.SpecificationParser(specFile)
-        self.extraGen = eg.ExtractionGen(extractionXmlFile)
+        self.extraGen = eg.ExtractionGen(specFile, extractionXmlFile)
         
 
     def getExtraFields(self):
@@ -37,35 +37,17 @@ class SpcRobot(object):
         Arguments:
         - `self`:
         """
-        spcItems = self.specParser.getSpcids(self.spcids)
-
-        def _extraFun(spcItem):
-            mapping = {'ByLine': 'ASMLINE',
-                       'ByHead': 'UPDOWN',
-                       'ByHeadNo': 'HEADNO', 
-                       'ByCell': 'CELLID'}
-            field = ''
-            chartType = spcItem['CHART_TYPE']
-            plotUnit = spcItem['PLOT_UNIT']
-            for unit in plotUnit:
-                field += (',' + mapping[unit])
-            if chartType == 'Mean-Sigma':
-                field += ',AVG,STD'
-            return (spcItem['SPCID'], field)
-
-        return map(_extraFun, spcItems)
+        return self.specParser.getExtraFields(self.spcids)
 
 
-    def getMakeExtractionPl(self, spcid):
+    def getMakeExtractionPls(self):
         """
         Get makeExtractionXML.pl template
 
         Arguments:
         - `self`:
-        - `spcid`:
         """
-        spcItem = self.getSpcid(spcid);
-        
+        return self.extraGen.generateMakeExtractionPls(self.spcids)
         
         
         
@@ -76,6 +58,7 @@ class SpcRobot(object):
         with open(self.outputFile, 'w') as f:
             self._out_spcids(f)
             self._out_extrafields(f)
+            self._out_makeExtractionPl(f)
             
 
     def _out_spcids(self, f):
@@ -105,16 +88,34 @@ class SpcRobot(object):
         for (spcid, extrafield) in extrafields:
             f.write(spcid + "\t" + extrafield + "\n")
         f.write("\n\n")
-    
+
+    def _out_makeExtractionPl(self, f):
+        """
+        Write out makeExtractionXML.pl
+
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('makeExtractionXML.pl')
+        f.write(self.SEPERATOR)
+        extractionPls = self.getMakeExtractionPls()
+        for pl in extractionPls:
+            f.write(pl + "\n")
+        f.write("\n\n")
+        
 
 def main():
     """
     main
     """
     inputFile = 'spcids.txt'
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
+    # specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
+    #                    'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    # extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
+    specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    extractionFile = 'extraction.xml'
+    
     sr = SpcRobot(inputFile, specificationXls, extractionFile)
     # print sr.spcids
     # print sr.getExtraFields()
