@@ -30,34 +30,32 @@ class ExtractionGen(object):
         - `self`:
         - `spcid`:
         """
-        spcItem = sp.getSpcid(spcid)
+        spcItem = self.specParser.getSpcid(spcid)
         unit = spcItem["UNIT"]
         spcidType = spcItem["SPCID_TYPE"]
-        spcSimilarItem = sp.findSimilar([spcid])
+        spcSimilarItem = self.specParser.findSimilar([spcid])[0]
         (fetcher, extractor) = self.getFetcherExtractor(spcSimilarItem["SPCID"])
         sourceTable = self.genSourceTable(spcItem)
         properties = ', '.join( self.getProperties(spcItem) )
         if unit == "HDD" and spcidType == "PR":
             sourceParamTable = "hdd_" + spcItem["PROCESS_ID"] + "_head"
             properties = ("sourceParamTable => '" + sourceParamTable) + "', " + properties
-        
-        
-        tpl = "&write( { spcIdBase => '{0}', "\
-                "	  freq => [ '{1}' ],"\
-                "	  source => [ 'spcdcs' ],"\
-                "	  cutoff => '{2}', "\
-                "	  carryOver => '{3}', "\
-                "	  modelSet => '{4}', "\
-                "	  parameterSet => '{5}', "\
-                "	  extractor => '{6}',"\
-                "	  fetcher => '{7}',"\
-                "	  properties => { sourceTable => '{8}', {9} },"\
-                "	  site => [ 'FUJ', 'PRB', 'SGP' ]"\
-                "      });"\
-                .format(spcid[:-4], spcItem["FREQUENCY"], spcItem["SAMPLE_SIZE"],
-                        spcItem["CARRY_OVER"], spcid, spcid, extractor, fetcher
-                    )
-        
+
+        site = "[" + (", ".join(spcItem["SITE"])) + "]"
+        print site
+        tpl = "&write( { spcIdBase => '" + spcid[:-4] + "', "\
+              "	  freq => [ '" + spcItem["FREQUENCY"] + "' ],"\
+              "	  source => [ 'spcdcs' ],"\
+              "	  cutoff => '" + spcItem["SAMPLE_SIZE"] + "', "\
+              "	  carryOver => '" + spcItem["CARRY_OVER"] + "', "\
+              "	  modelSet => '" + spcid + "', "\
+              "	  parameterSet => '" + spcid + "', "\
+              "	  extractor => '" + extractor + "',"\
+              "	  fetcher => '" + fetcher + "',"\
+              "	  properties => { sourceTable => '" + sourceTable + "', " + properties + " },"\
+              "	  site =>" + site + ""\
+              "      });"
+
         return tpl
 
     
@@ -155,4 +153,6 @@ if __name__ == '__main__':
                        'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
     extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
     eg = ExtractionGen(specificationXls, extractionFile)
-    print eg.getFetcherExtractors(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
+    # print eg.getFetcherExtractors(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
+    print eg.generateMakeExtractionPl('CC1700_PR02A_01H')
+

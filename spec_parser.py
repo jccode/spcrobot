@@ -15,7 +15,7 @@ class SpecificationParser(object):
     """ Constants """
     COL_INDEX = {
         "SPCID": 1,
-        "SITE": {"PRB": 3, "GSP": 4, "SGP": 5},
+        "SITE": {"PRB": 3, "GSP": 5, "SGP": 6},
         "PROCESS_NAME": 9,
         "PRODUCT": 10,
         "DATA": 11,
@@ -156,13 +156,14 @@ class SpecificationParser(object):
                     # SITE
                     sites = Set([])
                     for site,col in self.COL_INDEX["SITE"].iteritems():
-                        if not sheet.cell(row, col).value:
+                        if sheet.cell(row, col).value:
                             sites.add(site)
                     item["SITE"] = sites
-
+                    
+                    
                     # TARGET_DATA, PROPERTIES(for generate makeExtractionXML.pl)
                     targetData = sheet.cell(row, self.COL_INDEX["TARGET_DATA"]).value.lower()
-                    properties = self._detectProperties(processId, targetData, plotUnit)
+                    properties = self._detectProperties(targetData, plotUnit)
                     item["PROPERTIES"] = properties
 
                     self.items.append(item)
@@ -204,6 +205,7 @@ class SpecificationParser(object):
             properties.add("Without_HSAL")
         if "cycle > 1" in targetData or "cycle 1" in targetData or "cycle >1" in targetData:
             properties.add("Cycle_GT_1")
+        return properties
             
             
     def _detectPlotUnit(self, plotUnit):
