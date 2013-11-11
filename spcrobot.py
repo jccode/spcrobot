@@ -57,6 +57,7 @@ class SpcRobot(object):
         """
         with open(self.outputFile, 'w') as f:
             self._out_spcids(f)
+            self._out_product_data(f)
             self._out_extrafields(f)
             self._out_makeExtractionPl(f)
             
@@ -97,13 +98,33 @@ class SpcRobot(object):
         - `self`:
         - `f`:
         """
-        f.write('makeExtractionXML.pl')
+        f.write('makeExtractionXML.pl\n')
         f.write(self.SEPERATOR)
         extractionPls = self.getMakeExtractionPls()
         for pl in extractionPls:
             f.write(pl + "\n")
         f.write("\n\n")
-        
+
+
+    def _out_product_data(self, f):
+        """
+        Write out the value of column product, data
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('Product and Data\n')
+        f.write(self.SEPERATOR)
+        f.write('   SPCID \t    PRODUCT \t     DATA \t \n')
+        f.write('-----------\t ----------- \t ---------\n')
+        spcItems = self.specParser.getSpcids(self.spcids)
+        for spcItem in spcItems:
+            f.write(spcItem["SPCID"] + "\t"
+                    + spcItem["PRODUCT"] + "\t"
+                    + spcItem["DATA"] + "\n")
+        f.write("\n\n")
+
+            
 
 def main():
     """

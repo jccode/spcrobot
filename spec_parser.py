@@ -336,6 +336,7 @@ if __name__ == '__main__':
     # sp.constructItems()
     # print sp.getSpcid('CC1800_PR01B_01H')
     # print sp.getSpcids(['CC1800_PR01B_01H', 'ET1700_PR01A_08H'])
+
     # print sp.getExtraField('CC1800_PR01B_01H')
     print sp.getExtraFields(['CC1800_PR01B_01H', 'ET3100_PR01B_08H'])
     
