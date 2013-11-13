@@ -10,6 +10,7 @@ class MasterParser(object):
 
     """ Constants """
     COL_IDX_SPCID = {
+        "SPCID": 1, 
         "TABLE_NAME": 2,
         "LOADER_PROFILE": 3,
         "OPERATION": 4,
@@ -29,6 +30,9 @@ class MasterParser(object):
 
     ROWOFFSET_PROCESS = 3
     ROWOFFSET_FREQUENCY = 6
+
+    
+    showNotMatchItems = False
     
     
     def __init__(self, masterFile):
@@ -75,6 +79,7 @@ class MasterParser(object):
             if row < self.ROW_FROM_SPCID-1:
                 continue
 
+            spcid = sheet.cell(row, self.COL_IDX_SPCID["SPCID"]).value
             tableName = sheet.cell(row, self.COL_IDX_SPCID["TABLE_NAME"]).value
             operation = sheet.cell(row, self.COL_IDX_SPCID["OPERATION"]).value
             process = sheet.cell(row, self.COL_IDX_SPCID["PROCESS"]).value
@@ -91,6 +96,7 @@ class MasterParser(object):
                 item["PROCESS"] = process
                 item["PLOT_UNIT"] = plotUnit
                 item["PLOT_ITEM"] = plotItem
+                item["SPCID"] = spcid
                 self.items[profile] = item
 
             
@@ -142,13 +148,36 @@ class MasterParser(object):
                         mapping.append(str(0))
 
             except  KeyError as e:
-                # print e
-                errorMsg = "{0} not found.".format(profile)
-                # raise Exception(errorMsg)
-                print errorMsg
+                if self.showNotMatchItems:
+                    # print e
+                    errorMsg = "{0} not found.".format(profile)
+                    # raise Exception(errorMsg)
+                    print errorMsg
                 
-                
-            
+
+    def getProfile(self, spcid):
+        """
+        Get profile by spcid
+
+        Arguments:
+        - `self`:
+        - `spcid`:
+        """
+        profiles = self.items.values()
+        return filter(lambda item: item["SPCID"] == spcid, profiles)
+
+
+    def getProfiles(self, spcids):
+        """
+        Get profiles 
+
+        Arguments:
+        - `self`:
+        - `spcids`:
+        """
+        return map(self.getProfile, spcids)
+
+    
     def flatOutputItems(self):
         """
         Output the items flat.
@@ -167,7 +196,9 @@ def test():
     """
     masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.2.xls'
     mp = MasterParser(masterFile)
-    mp.flatOutputItems()
+    # mp.flatOutputItems()
+    # print mp.getProfile('ET1985_PR01A_01H')
+    print mp.getProfiles(['ET1985_PR01A_01H', 'MB3700_PR01A_01H'])
 
     
 if __name__ == '__main__':
