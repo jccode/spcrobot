@@ -10,7 +10,6 @@ class MasterParser(object):
 
     """ Constants """
     COL_IDX_SPCID = {
-        "SPCID": 1,
         "TABLE_NAME": 2,
         "LOADER_PROFILE": 3,
         "OPERATION": 4,
@@ -19,7 +18,7 @@ class MasterParser(object):
         "PLOT_ITEM": 9
     }
 
-    COL_IDX_WEBSPC2_SPCID = 1
+    COL_IDX_WEBSPC2_PROFILE = 1
     COL_IDX_WEBSPC2_MAPPING_BEGIN = 4
     COL_IDX_WEBSPC2_MAPPING_END = 8
     COL_IDX_WEBSPC2_ALIAS_BEGIN = 9
@@ -75,18 +74,24 @@ class MasterParser(object):
         for row in range(sheet.nrows):
             if row < self.ROW_FROM_SPCID-1:
                 continue
+
+            tableName = sheet.cell(row, self.COL_IDX_SPCID["TABLE_NAME"]).value
+            operation = sheet.cell(row, self.COL_IDX_SPCID["OPERATION"]).value
+            process = sheet.cell(row, self.COL_IDX_SPCID["PROCESS"]).value
+            plotUnit = sheet.cell(row, self.COL_IDX_SPCID["PLOT_UNIT"]).value
+            plotItem = sheet.cell(row, self.COL_IDX_SPCID["PLOT_ITEM"]).value
+            profileValue = sheet.cell(row, self.COL_IDX_SPCID["LOADER_PROFILE"]).value
             
-            item = {}
-            spcid = sheet.cell(row, self.COL_IDX_SPCID["SPCID"]).value
-            item["SPCID"] = spcid
-            item["TABLE_NAME"] = sheet.cell(row, self.COL_IDX_SPCID["TABLE_NAME"]).value
-            item["LOADER_PROFILE"] = sheet.cell(row, self.COL_IDX_SPCID["LOADER_PROFILE"]).value
-            item["OPERATION"] = sheet.cell(row, self.COL_IDX_SPCID["OPERATION"]).value
-            item["PROCESS"] = sheet.cell(row, self.COL_IDX_SPCID["PROCESS"]).value
-            item["PLOT_UNIT"] = sheet.cell(row, self.COL_IDX_SPCID["PLOT_UNIT"]).value
-            item["PLOT_ITEM"] = sheet.cell(row, self.COL_IDX_SPCID["PLOT_ITEM"]).value
-        
-            self.items[spcid] = item
+            profiles = profileValue.split("\n")
+            for profile in profiles:
+                item = {}
+                item["LOADER_PROFILE"] = profile
+                item["TABLE_NAME"] = tableName
+                item["OPERATION"] = operation
+                item["PROCESS"] = process
+                item["PLOT_UNIT"] = plotUnit
+                item["PLOT_ITEM"] = plotItem
+                self.items[profile] = item
 
             
     def __fromSheetWebspc2(self, sheet):
@@ -98,45 +103,51 @@ class MasterParser(object):
         - `sheet`:
         """
         rowoffset = 0
-        spcid = ''
+        profile = ''
         mapping = []
+
         for row in range(sheet.nrows):
             if row < self.ROW_FROM_WEBSPC2-1:
                 continue
 
-            _spcid = sheet.cell(row, self.COL_IDX_WEBSPC2_SPCID).value
-            print _spcid, '**', spcid, '**'
-            if _spcid:       # new spcid begin
-                print '_spcid not null'
-                if mapping:
-                    print mapping
-                    self.items[spcid]["MAPPING"] = ''.join(mapping)
-                spcid = _spcid;
-                rowoffset = 0
-                mapping = []
+            try:
+                _profile = sheet.cell(row, self.COL_IDX_WEBSPC2_PROFILE).value
+                if _profile:       # new profile begin
+                    if mapping:
+                        self.items[profile]["MAPPING"] = ''.join(mapping)
+
+                    profile = _profile;
+                    rowoffset = 0
+                    mapping = []
+
+                else:               # spcid is empty
+                    rowoffset += 1
+                    if rowoffset == self.ROWOFFSET_PROCESS:
+                        aliasProcess = []
+                        for col in range(self.COL_IDX_WEBSPC2_ALIAS_BEGIN, self.COL_IDX_WEBSPC2_ALIAS_END+1):
+                            aliasProcess.append(sheet.cell(row, col).value)
+                        self.items[profile]["ALIAS_PROCESS"] = aliasProcess
+
+                    if rowoffset == self.ROWOFFSET_FREQUENCY:
+                        aliasFrequency = []
+                        for col in range(self.COL_IDX_WEBSPC2_ALIAS_BEGIN, self.COL_IDX_WEBSPC2_ALIAS_END+1):
+                            aliasFrequency.append(sheet.cell(row, col).value)
+                        self.items[profile]["ALIAS_FREQUENCY"] = aliasFrequency
+
+                # assemble mapping
+                for col in range(self.COL_IDX_WEBSPC2_MAPPING_BEGIN, self.COL_IDX_WEBSPC2_MAPPING_END+1):
+                    if sheet.cell(row, col).value:
+                        mapping.append(str(1))
+                    else:
+                        mapping.append(str(0))
+
+            except  KeyError as e:
+                # print e
+                errorMsg = "{0} not found.".format(profile)
+                # raise Exception(errorMsg)
+                print errorMsg
                 
-            else:               # spcid is empty
-                rowoffset += 1
-                if rowoffset == self.ROWOFFSET_PROCESS:
-                    aliasProcess = []
-                    for col in range(self.COL_IDX_WEBSPC2_ALIAS_BEGIN, self.COL_IDX_WEBSPC2_ALIAS_END+1):
-                        aliasProcess.append(sheet.cell(row, col).value)
-                    self.items[spcid]["ALIAS_PROCESS"] = aliasProcess
-
-                if rowoffset == self.ROWOFFSET_FREQUENCY:
-                    aliasFrequency = []
-                    for col in range(self.COL_IDX_WEBSPC2_ALIAS_BEGIN, self.COL_IDX_WEBSPC2_ALIAS_END+1):
-                        aliasFrequency.append(sheet.cell(row, col).value)
-                    self.items[spcid]["ALIAS_FREQUENCY"] = aliasFrequency
-
-            # assemble mapping
-            for col in range(self.COL_IDX_WEBSPC2_MAPPING_BEGIN, self.COL_IDX_WEBSPC2_MAPPING_END+1):
-                if sheet.cell(row, col).value:
-                    mapping.append(1)
-                else:
-                    mapping.append(0)
-            
-                    
+                
             
     def flatOutputItems(self):
         """
