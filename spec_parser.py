@@ -70,7 +70,11 @@ class SpecificationParser(object):
         mapping = {'ByLine': 'ASMLINE',
                    'ByHead': 'UPDOWN',
                    'ByHeadNo': 'HEADNO', 
-                   'ByCell': 'CELLID'}
+                   'ByCell': 'CELLID',
+                   'ByTester': 'TESTERID',
+                   'ByHeadGrade': 'HEADGRADE',
+                   'BySswType': 'SSWTYPE'}
+        
         spcItem = self.getSpcid(spcId)
         field = ''
         chartType = spcItem['CHART_TYPE']
@@ -192,7 +196,7 @@ class SpecificationParser(object):
 
     def _detectProperties(self, targetData, plotUnit):
         """
-        PROPERTIES: Rework, Prime, Latest_Data, Rework_Only, New_Only, Pass_And_Fail, Without_HSAL, Cycle_GT_1
+        PROPERTIES: Rework, Prime, Latest_Data, Rework_Only, New_Only, Pass_And_Fail, Without_HSAL, Cycle_GT_1, Test_Pass
 
         Arguments:
         - `self`:
@@ -204,15 +208,21 @@ class SpecificationParser(object):
             properties.add("Rework")
         if "prime" in plotUnit or "prime" in targetData:
             properties.add("Prime")
-        if "latest data" in targetData:
+        if "latest" in targetData:
             properties.add("Latest_Data")
         if "rework only" in targetData:
             properties.add("Rework_Only")
         if "new only" in targetData:
             properties.add("New_Only")
-        if "pass and fail" in targetData:
+
+        if "pass and fail" in targetData or "pass & fail" in targetData:
             properties.add("Pass_And_Fail")
-        if "without hsat" in targetData:
+        elif "test pass" in targetData:
+            properties.add("Test_Pass")
+        else:
+            pass
+
+        if "a~l" in targetData:
             properties.add("Without_HSAL")
         if "cycle > 1" in targetData or "cycle 1" in targetData or "cycle >1" in targetData:
             properties.add("Cycle_GT_1")
@@ -221,10 +231,23 @@ class SpecificationParser(object):
             
     def _detectPlotUnit(self, plotUnit):
         """
-        PLOT_UNIT: ByLine, ByHead, ByHeadNo, ByCell, BySswType
+        PLOT_UNIT: ByLine, ByHead, ByHeadNo, ByCell, BySswType, ByHeadGrade, ByTester
         @return array
         """
         plotUnits = Set([])
+
+        # by lpp is rather special. complete statement is:
+        # By Lpp line(=TESTERID) .
+        # so, need to return immediately when encounter "by lpp".
+        if "by lpp" in plotUnit:
+            plotUnits.add("ByCell")
+            return plotUnits
+
+        # It's not always true that "by" in front of "Tester"
+        if "tester" in plotUnit:
+            plotUnits.add("ByTester")
+
+        # For others, "by" should ahead of the type.
         if "by" not in plotUnit:
             return plotUnits
         
@@ -234,6 +257,8 @@ class SpecificationParser(object):
         if "head" in plotUnit:
             if "no" in plotUnit:
                 plotUnits.add("ByHeadNo")
+            elif "grade" in plotUnit:
+                plotUnits.add("ByHeadGrade")
             else:
                 plotUnits.add("ByHead")
 

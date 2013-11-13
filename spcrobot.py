@@ -59,6 +59,9 @@ class SpcRobot(object):
             self._out_spcids(f)
             self._out_product_data(f)
             self._out_extrafields(f)
+            self._out_site(f)
+            self._out_makeInitTable(f)
+            self._out_makeInitView(f)
             self._out_makeExtractionPl(f)
             
 
@@ -124,18 +127,58 @@ class SpcRobot(object):
                     + spcItem["DATA"] + "\n")
         f.write("\n\n")
 
-            
+    def _out_site(self, f):
+        """
+        Write out the site of spcid.
 
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('Site\n')
+        f.write(self.SEPERATOR)
+        spcItems = self.specParser.getSpcids(self.spcids)
+        for spcItem in spcItems:
+            f.write(spcItem["SPCID"] + "\t" + ','.join(spcItem["SITE"]) + "\n")
+        f.write("\n\n")
+
+    def _out_makeInitTable(self, f):
+        """
+        Write out makeInitTableSQL.pl
+
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('makeInitTableSQL.pl\n')
+        f.write(self.SEPERATOR)
+        f.write( "\n".join(self.extraGen.getMakeInitTableSQL(self.spcids)) )
+        f.write("\n\n")
+        
+    def _out_makeInitView(self, f):
+        """
+        Write out makeInitViewSQL.pl
+
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('makeInitViewSQL.pl\n')
+        f.write(self.SEPERATOR)
+        f.write("\n".join(self.extraGen.getMakeInitViewSQL(self.spcids)))
+        f.write("\n\n")
+        
+        
 def main():
     """
     main
     """
     inputFile = 'spcids.txt'
-    # specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
-    #                    'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    # extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
-    specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    extractionFile = 'extraction.xml'
+    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
+                       'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
+    # specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    # extractionFile = 'extraction.xml'
     
     sr = SpcRobot(inputFile, specificationXls, extractionFile)
     # print sr.spcids
