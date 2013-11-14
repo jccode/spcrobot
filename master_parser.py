@@ -41,7 +41,7 @@ class MasterParser(object):
         self.constructItems()
 
 
-    def findSimilar(self, spcids):
+    def findSimilar(self, profileIds):
         """
         Find similar spcid with the given spcid
 
@@ -49,8 +49,16 @@ class MasterParser(object):
         - `self`:
         - `spcids`:
         """
-        pass
+        profiles = self.items.values()
+        srcItems = filter(lambda item: item["PROFILE"] not in profileIds, profiles)
+        destItems = filter(lambda item: item["PROFILE"] in profileIds, profiles)
 
+        
+        def _findSimilarOne(destItem):
+            ret1 = filter(lambda item: item["MAPPING"] == destItem["MAPPING"], srcItems)
+            return ret1
+            
+        return map(_findSimilarOne, destItems)
 
     def constructItems(self):
         """
@@ -81,22 +89,42 @@ class MasterParser(object):
 
             spcid = sheet.cell(row, self.COL_IDX_SPCID["SPCID"]).value
             tableName = sheet.cell(row, self.COL_IDX_SPCID["TABLE_NAME"]).value
-            operation = sheet.cell(row, self.COL_IDX_SPCID["OPERATION"]).value
             process = sheet.cell(row, self.COL_IDX_SPCID["PROCESS"]).value
-            plotUnit = sheet.cell(row, self.COL_IDX_SPCID["PLOT_UNIT"]).value
             plotItem = sheet.cell(row, self.COL_IDX_SPCID["PLOT_ITEM"]).value
+            plotUnitValue = sheet.cell(row, self.COL_IDX_SPCID["PLOT_UNIT"]).value
+            operationValue = sheet.cell(row, self.COL_IDX_SPCID["OPERATION"]).value
             profileValue = sheet.cell(row, self.COL_IDX_SPCID["LOADER_PROFILE"]).value
+            processId = profileValue[2:6]
+
+            lowerPlotUnitValue = plotUnitValue.lower()
+            if "mean" in lowerPlotUnitValue and "cpk" in lowerPlotUnitValue:
+                plotUnit = "CPK"
+            elif "mean" in lowerPlotUnitValue:
+                plotUnit = "MeanSigma"
+            else:
+                plotUnit = plotUnitValue
             
             profiles = profileValue.split("\n")
-            for profile in profiles:
+            operations = operationValue.split("\n")
+            lenProfiles = len(profiles)
+            lenOperations = len(operations)
+
+            
+            for i in range(lenProfiles):
                 item = {}
-                item["LOADER_PROFILE"] = profile
+                profile = profiles[i]
+                item["PROFILE"] = profile
                 item["TABLE_NAME"] = tableName
-                item["OPERATION"] = operation
                 item["PROCESS"] = process
-                item["PLOT_UNIT"] = plotUnit
                 item["PLOT_ITEM"] = plotItem
                 item["SPCID"] = spcid
+                item["PROCESS_ID"] = processId
+                
+                item["PLOT_UNIT"] = plotUnit
+                
+                j = i if i < lenOperations else (lenOperations - 1)
+                item["OPERATION"] = operations[j][5:]
+                
                 self.items[profile] = item
 
             
@@ -111,6 +139,7 @@ class MasterParser(object):
         rowoffset = 0
         profile = ''
         mapping = []
+        errorOccur = False
 
         for row in range(sheet.nrows):
             if row < self.ROW_FROM_WEBSPC2-1:
@@ -119,6 +148,12 @@ class MasterParser(object):
             try:
                 _profile = sheet.cell(row, self.COL_IDX_WEBSPC2_PROFILE).value
                 if _profile:       # new profile begin
+                    if errorOccur:
+                        mapping = []
+                        errorOccur = False
+                        # delete it from self.items
+                        # del self.items[profile]
+                        
                     if mapping:
                         self.items[profile]["MAPPING"] = ''.join(mapping)
 
@@ -127,6 +162,9 @@ class MasterParser(object):
                     mapping = []
 
                 else:               # spcid is empty
+                    if errorOccur:
+                        continue
+                        
                     rowoffset += 1
                     if rowoffset == self.ROWOFFSET_PROCESS:
                         aliasProcess = []
@@ -142,7 +180,8 @@ class MasterParser(object):
 
                 # assemble mapping
                 for col in range(self.COL_IDX_WEBSPC2_MAPPING_BEGIN, self.COL_IDX_WEBSPC2_MAPPING_END+1):
-                    if sheet.cell(row, col).value:
+                    v = sheet.cell(row, col).value.strip()
+                    if v == '0' or v == 'O' or v == 'o':
                         mapping.append(str(1))
                     else:
                         mapping.append(str(0))
@@ -150,10 +189,11 @@ class MasterParser(object):
             except  KeyError as e:
                 if self.showNotMatchItems:
                     # print e
-                    errorMsg = "{0} not found.".format(profile)
+                    errorMsg = "loader profile {0} not found in SPCID sheet.".format(profile)
                     # raise Exception(errorMsg)
                     print errorMsg
-                
+                errorOccur = True
+                    
 
     def getProfile(self, spcid):
         """
@@ -188,8 +228,17 @@ class MasterParser(object):
         for spcItem in self.items.itervalues():
             print spcItem
         
-    
-        
+    def outputMapping(self):
+        """
+        Output mappings, purpose for debug
+        Arguments:
+        - `self`:
+        """
+        for spcItem in self.items.itervalues():
+            try:
+                print spcItem["PROFILE"], "\t\t", spcItem["MAPPING"]
+            except KeyError as e:
+                print spcItem["PROFILE"], " has not keys"
 
 def test():
     """
@@ -198,8 +247,10 @@ def test():
     mp = MasterParser(masterFile)
     # mp.flatOutputItems()
     # print mp.getProfile('ET1985_PR01A_01H')
-    print mp.getProfiles(['ET1985_PR01A_01H', 'MB3700_PR01A_01H'])
-
+    # print mp.getProfiles(['ET1985_PR01A_01H', 'MB3700_PR01A_01H'])
+    # print mp.findSimilar('DT3600_ER02_08H')
+    mp.outputMapping()
+    
     
 if __name__ == '__main__':
     test()
