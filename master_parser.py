@@ -53,10 +53,26 @@ class MasterParser(object):
         srcItems = filter(lambda item: item["PROFILE"] not in profileIds, profiles)
         destItems = filter(lambda item: item["PROFILE"] in profileIds, profiles)
 
-        
         def _findSimilarOne(destItem):
-            ret1 = filter(lambda item: item["MAPPING"] == destItem["MAPPING"], srcItems)
-            return ret1
+            
+            def _dist(item, field):
+                return 1 if item[field] == destItem[field] else 0
+            
+            ret1 = filter(lambda item: item["MAPPING"] == destItem["MAPPING"]
+                          and item["PLOT_UNIT"] == destItem["PLOT_UNIT"]
+                          , srcItems)
+            
+            if len(ret1) > 0:
+                ret2 = map(lambda item: 20 * _dist(item, "PLOT_ITEM")
+                           + 10 * _dist(item, "OPERATION")
+                           + 5 * _dist(item, "FREQUENCY")
+                           , ret1)
+                ret3 = max(ret2)
+                idx = ret2.index(ret3)
+                return ret1[idx]
+                
+            else:
+                return None
             
         return map(_findSimilarOne, destItems)
 
@@ -73,8 +89,11 @@ class MasterParser(object):
                 self.__fromSheetWebspc2(sheet)
             else:
                 pass
+            
+        # clear those profile with "MAPPING"
+        self.items = dict((k, v) for k, v in self.items.iteritems() if "MAPPING" in v )
 
-
+        
     def __fromSheetSpcid(self, sheet):
         """
         Construct items from SPCID sheet
@@ -90,19 +109,20 @@ class MasterParser(object):
             spcid = sheet.cell(row, self.COL_IDX_SPCID["SPCID"]).value
             tableName = sheet.cell(row, self.COL_IDX_SPCID["TABLE_NAME"]).value
             process = sheet.cell(row, self.COL_IDX_SPCID["PROCESS"]).value
-            plotItem = sheet.cell(row, self.COL_IDX_SPCID["PLOT_ITEM"]).value
-            plotUnitValue = sheet.cell(row, self.COL_IDX_SPCID["PLOT_UNIT"]).value
+            plotItemValue = sheet.cell(row, self.COL_IDX_SPCID["PLOT_ITEM"]).value
+            plotUnit = sheet.cell(row, self.COL_IDX_SPCID["PLOT_UNIT"]).value
             operationValue = sheet.cell(row, self.COL_IDX_SPCID["OPERATION"]).value
             profileValue = sheet.cell(row, self.COL_IDX_SPCID["LOADER_PROFILE"]).value
             processId = profileValue[2:6]
+            frequency = profileValue[12:15]
 
-            lowerPlotUnitValue = plotUnitValue.lower()
-            if "mean" in lowerPlotUnitValue and "cpk" in lowerPlotUnitValue:
-                plotUnit = "CPK"
-            elif "mean" in lowerPlotUnitValue:
-                plotUnit = "MeanSigma"
+            lowerplotItemValue = plotItemValue.lower()
+            if "mean" in lowerplotItemValue and "cpk" in lowerplotItemValue:
+                plotItem = "CPK"
+            elif "mean" in lowerplotItemValue:
+                plotItem = "MeanSigma"
             else:
-                plotUnit = plotUnitValue
+                plotItem = plotItemValue
             
             profiles = profileValue.split("\n")
             operations = operationValue.split("\n")
@@ -119,6 +139,7 @@ class MasterParser(object):
                 item["PLOT_ITEM"] = plotItem
                 item["SPCID"] = spcid
                 item["PROCESS_ID"] = processId
+                item["FREQUENCY"] = frequency
                 
                 item["PLOT_UNIT"] = plotUnit
                 
@@ -151,8 +172,7 @@ class MasterParser(object):
                     if errorOccur:
                         mapping = []
                         errorOccur = False
-                        # delete it from self.items
-                        # del self.items[profile]
+                        
                         
                     if mapping:
                         self.items[profile]["MAPPING"] = ''.join(mapping)
@@ -193,8 +213,8 @@ class MasterParser(object):
                     # raise Exception(errorMsg)
                     print errorMsg
                 errorOccur = True
-                    
 
+                
     def getProfile(self, spcid):
         """
         Get profile by spcid
@@ -240,6 +260,8 @@ class MasterParser(object):
             except KeyError as e:
                 print spcItem["PROFILE"], " has not keys"
 
+
+                
 def test():
     """
     """
@@ -248,9 +270,38 @@ def test():
     # mp.flatOutputItems()
     # print mp.getProfile('ET1985_PR01A_01H')
     # print mp.getProfiles(['ET1985_PR01A_01H', 'MB3700_PR01A_01H'])
-    # print mp.findSimilar('DT3600_ER02_08H')
-    mp.outputMapping()
+    print mp.findSimilar(['DT3600_ER02_08H'])
+    # print mp.findSimilar(['ET1985_PR01_01H', 'MB3700_PR01_01H'])
+    # mp.outputMapping()
+
+
     
+
+    
+def main():
+    """
+    """
+    SEPERATOR = '=================================\n'
+    masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.2.xls'
+    profileIdInput = 'profileIds.txt'
+    outputFile = 'master_out.txt'
+    profileIds = [line.strip() for line in open(profileIdInput)]
+
+    mp = MasterParser(masterFile)
+    with open(outputFile, 'w') as f:
+        retItems = mp.findSimilar(profileIds)
+        f.write('load profile to be process\n')
+        f.write(SEPERATOR)
+        f.write("\n".join(profileIds))
+        f.write("\n\n")
+
+        f.write('similar profile\n')
+        f.write(SEPERATOR)
+        for i in range(len(profileIds)):
+            f.write("{0}    similar profile is: {1}\n".format(profileIds[i], retItems[i]["PROFILE"]) )
+        f.write("\n")
+        
     
 if __name__ == '__main__':
-    test()
+    # test()
+    main()
