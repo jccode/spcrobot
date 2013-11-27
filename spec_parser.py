@@ -177,6 +177,7 @@ class SpecificationParser(object):
                     
                     
                     # TARGET_DATA, PROPERTIES(for generate makeExtractionXML.pl)
+                    
                     targetData = sheet.cell(row, self.COL_INDEX["TARGET_DATA"]).value.lower()
                     properties = self._detectProperties(targetData, plotUnit)
                     item["PROPERTIES"] = properties
@@ -196,36 +197,57 @@ class SpecificationParser(object):
 
     def _detectProperties(self, targetData, plotUnit):
         """
-        PROPERTIES: Rework, Prime, Latest_Data, Rework_Only, New_Only, Pass_And_Fail, Without_HSAL, Cycle_GT_1, Test_Pass
+        PROPERTIES: Rework, Prime, Latest_Data, Rework_Only, First_Cycle_Only, Pass_Only, Without_HSAL, Filter_Fail, Exclude_Trial, Exclude_Inline_Retest, Exclude_Ship_Return
 
         Arguments:
         - `self`:
         - `targetData`:
         - `plotUnit`:
         """
-        properties = Set([])
+        properties = {}
         if "rework" in plotUnit or "rework" in targetData:
-            properties.add("Rework")
+            properties['Rework'] = True
         if "prime" in plotUnit or "prime" in targetData:
-            properties.add("Prime")
+            properties["Prime"] = True
         if "latest" in targetData:
-            properties.add("Latest_Data")
+            properties["Latest_Data"] = True
         if "rework only" in targetData:
-            properties.add("Rework_Only")
-        if "new only" in targetData:
-            properties.add("New_Only")
-
-        if "pass and fail" in targetData or "pass & fail" in targetData:
-            properties.add("Pass_And_Fail")
-        elif "test pass" in targetData:
-            properties.add("Test_Pass")
+            properties["Rework_Only"] = True
+            
+        if "new only" in targetData or "cycle 1" in targetData:
+            properties["First_Cycle_Only"] = True
+        elif "include rework" in targetData or "include retest" in targetData:
+            properties["First_Cycle_Only"] = False
         else:
             pass
 
-        if "a~l" in targetData:
-            properties.add("Without_HSAL")
-        if "cycle > 1" in targetData or "cycle 1" in targetData or "cycle >1" in targetData:
-            properties.add("Cycle_GT_1")
+        if "pass and fail" in targetData or "pass & fail" in targetData or "cycle > 1" in targetData or "cycle >1" in targetData:
+            properties["Pass_Only"] = False
+        elif "test pass" in targetData:
+            properties["Pass_Only"] = True
+        else:
+            pass
+
+        if "without hsat" in targetData or "without hddt" in targetData or "exclude trial unit" in targetData:
+            properties["Exclude_Trial"] = True
+        elif "with hsat" in targetData or "with hddt" in targetData or "include trial unit" in targetData:
+            properties["Exclude_Trial"] = False
+        else:
+            pass
+
+        if "all except" in targetData:
+            properties["Filter_Fail"] = True
+            
+        if "include inline retest fail" in targetData:
+            properties["Exclude_Inline_Retest"] = False
+        elif "exclude inline retest fail" in targetData:
+            properties["Exclude_Inline_Retest"] = True
+        else:
+            pass
+            
+        if "include rework" in targetData or "customer return" in targetData:
+            properties["Exclude_Ship_Return"] = False
+            
         return properties
             
             

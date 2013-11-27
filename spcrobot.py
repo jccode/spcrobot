@@ -174,8 +174,8 @@ def main():
     main
     """
     inputFile = 'spcids.txt'
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
+    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C144/'\
+                       'HDD SPC Monitoring Parameter Specification rev.4.1_jc.xls'
     extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
     # specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
     # extractionFile = 'extraction.xml'

@@ -228,8 +228,54 @@ class ExtractionGen(object):
             "Cycle_GT_1": "passOnly => 'false'"
         }
         values = Set([])
-        for p in properties:
-            values.add(mapping[p])
+
+        # if Rework_Only exist, remove Rework. Because the condition rework_only involve rework.
+        if "Rework_Only" in properties and "Rework" in properties:
+            del properties["Rework"]
+
+        for k, v in properties.iteritems():
+            s = None
+            if k == "Rework" and v:
+                s = "typeOfHSA => 'NotNew'" if unit == 'HSA' else "typeOfHDE => 'NotPrime'"
+                
+            elif k == "Prime" and v:
+                s = "typeOfHSA => 'New'" if unit == 'HSA' else ["typeOfHDE => 'Prime'", "firstCycleOnly => 'true'"]
+                
+            elif k == "Latest_Data" and v:
+                s = "latestOnly => 'true'"
+                
+            elif k == "Rework_Only" and v:
+                s = "notFirstCycleOnly => 'true'"
+                
+            elif k == "First_Cycle_Only":
+                s = "firstCycleOnly => 'true'" if v else "firstCycleOnly => 'false'"
+                
+            elif k == "Pass_Only":
+                s = "passOnly => 'true'" if v else "passOnly => 'false'"
+                
+            elif k == "Exclude_Trial":
+                s = "excludeTrial => 'true'" if v else "excludeTrial => 'false'"
+                
+            elif k == "Filter_Fail" and v:
+                s = "filterFail => 'true'"
+                
+            elif k == "Exclude_Inline_Retest":
+                s = "excludeInlineRetest => 'true'" if v else "excludeInlineRetest => 'false'"
+                
+            elif k == "Exclude_Ship_Return":
+                if not v:
+                    s = "excludeShipReturn => 'false'"
+                
+            else:
+                pass
+            
+            if s:
+                if type(s) == list:
+                    for i in s:
+                        values.add(i)
+                else:
+                    values.add(s)
+        
         return values
 
 
