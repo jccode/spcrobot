@@ -20,6 +20,7 @@ class SpecificationParser(object):
         "PRODUCT": 10,
         "DATA": 11,
         "TARGET_DATA": 12,
+        "GROUPING_KEYS": 13,
         "PLOT_UNIT": 14,
         "SAMPLE_SIZE": 15,
         "CARRY_OVER": 16,
@@ -103,6 +104,7 @@ class SpecificationParser(object):
         each item is a dictionary.
 
         CHART_TYPE :: Mean-Sigma, Yield, Defective, Total-Defective, Error-Ratio, Combined-Error-Ratio
+        GROUPING_KEYS :: MTYPE, PRODUCT, PROD_DISKNUM
         """
         wb = open_workbook(self.file)
         for s_index in range(wb.nsheets):
@@ -154,7 +156,7 @@ class SpecificationParser(object):
 
                     data = sheet.cell(row, self.COL_INDEX["DATA"]).value.lower()
                     item["DATA"] = data
-                    item["PRODUCT"] = sheet.cell(row, self.COL_INDEX["PRODUCT"]).value.lower()
+                    item["PRODUCT"] = sheet.cell(row, self.COL_INDEX["PRODUCT"]).value
 
                     # CHART_TYPE
                     detectedChartType = self._detectChartType(chartType, data, spcidType)
@@ -174,6 +176,10 @@ class SpecificationParser(object):
                         if sheet.cell(row, col).value:
                             sites.add(site)
                     item["SITE"] = sites
+
+                    # GROUPING_KEYS
+                    groupingKey = sheet.cell(row, self.COL_INDEX["GROUPING_KEYS"]).value.lower()
+                    item["GROUPING_KEYS"] = self._detectGroupingKeys(groupingKey)
                     
                     
                     # TARGET_DATA, PROPERTIES(for generate makeExtractionXML.pl)
@@ -194,6 +200,20 @@ class SpecificationParser(object):
                 
         # ok
         # self.listItems()
+
+    def _detectGroupingKeys(self, groupingKey):
+        """
+        detect grouping keys
+        Arguments:
+        - `self`:
+        - `groupingKey`:
+        """
+        if "m/t" in groupingKey:
+            return "MTYPE"
+        if "product" in groupingKey and "disknum" in groupingKey:
+            return "PROD_DISKNUM"
+        if "product" in groupingKey:
+            return "PRODUCT"
 
     def _detectProperties(self, targetData, plotUnit):
         """
