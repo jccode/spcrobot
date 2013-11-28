@@ -47,12 +47,22 @@ class ExtractionGen(object):
             return "********** WARNNING **********\n"\
                 "Not fetcher & extractor found in extraction.xml for "\
                 + spcid + ", similar spcid is " + spcSimilarItem["SPCID"]
-            
-        sourceTable = self.genSourceTable(spcItem)
+
+        # sourceTable & sourceParamTable
+        sourceParamTable = None
+        if spcSimilarItem["PROCESS_ID"] == spcItem["PROCESS_ID"]:
+            # get source table & source parameter table
+            (sourceTable, sourceParamTable) = self.getSourceTableParamTable(spcSimilarItem["SPCID"])
+        else:
+            # generate
+            sourceTable = self.genSourceTable(spcItem)
+            if spcidType == "PR" and ("parameter" in data or "parametric" in data):
+                sourceParamTable = unit.lower() + "_" + spcItem["PROCESS_ID"] + "_head"
+                
+        
         properties = ', '.join( self.getProperties(spcItem) )
         
-        if spcidType == "PR" and ("parameter" in data or "parametric" in data):
-            sourceParamTable = unit.lower() + "_" + spcItem["PROCESS_ID"] + "_head"
+        if sourceParamTable:
             properties = ("sourceParamTable => '" + sourceParamTable) + "', " + properties
 
         site = "[ 'FUJ', " + (", ".join(map(lambda x: "'" + x + "'" , spcItem["SITE"]))) + "]"
@@ -68,7 +78,7 @@ class ExtractionGen(object):
               "	  parameterSet => '" + spcid + "', \n" \
               "	  extractor => '" + extractor + "',\n" \
               "	  fetcher => '" + fetcher + "',\n" \
-              "	  properties => { sourceTable => '" + sourceTable + "', " + properties + " },\n" \
+              "	  properties => { sourceTable => \"" + sourceTable + "\", " + properties + " },\n" \
               "	  site =>" + site + "\n" \
               "});\n "
         
@@ -153,7 +163,26 @@ class ExtractionGen(object):
             return False
         
         return self.root.find("./extraction[@spcId='{0}']".format(spcid)) is not None
-    
+
+
+    def getSourceTableParamTable(self, spcid):
+        """
+        Get sourceTable & sourceParamTable from extraction.xml
+
+        Arguments:
+        - `self`:
+        - `spcid`:
+        """
+        node = self.root.find("./extraction[@spcId='{0}']".format(spcid))
+        if node is not None:
+            sourceTable = node.find("property[@key='sourceTable']").get('value')
+            sourceParamTable = None
+            sourceParamNode = node.find("property[@key='sourceParamTable']")
+            if sourceParamNode is not None:
+                sourceParamTable = sourceParamNode.get('value')
+            return (sourceTable, sourceParamTable)
+        return None
+        
 
     def getFetcherExtractor(self, spcid):
         """
