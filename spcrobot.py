@@ -50,7 +50,6 @@ class SpcRobot(object):
         return self.extraGen.generateMakeExtractionPls(self.spcids)
         
         
-        
     def out(self):
         """
         Write output files
@@ -63,6 +62,7 @@ class SpcRobot(object):
             self._out_makeInitTable(f)
             self._out_makeInitView(f)
             self._out_makeExtractionPl(f)
+            self._out_extraction_xh(f)
             
 
     def _out_spcids(self, f):
@@ -167,6 +167,23 @@ class SpcRobot(object):
         f.write(self.SEPERATOR)
         f.write("\n".join(self.extraGen.getMakeInitViewSQL(self.spcids)))
         f.write("\n\n")
+
+    def _out_extraction_xh(self, f):
+        """
+        Write out extraction-spc-xxh.sh
+
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('extraction-spc-xxh.sh\n')
+        f.write(self.SEPERATOR)
+        hourStrDict = self.extraGen.getExtractionSpcXh(self.spcids)
+        for hour, rets in hourStrDict.iteritems():
+            f.write(hour+"\n")
+            f.write("-------------\n")
+            f.write("\n\n".join(rets))
+        
         
         
 def main():

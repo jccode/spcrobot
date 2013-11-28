@@ -354,7 +354,29 @@ class ExtractionGen(object):
             return '&makeView("{0}",[ {1} ], [ {2} ], ["{3}"]);'.format(spcId[:-5], fields, calcField, spcId[-3:])
         
         return map(_translateFun, spcItems)
-    
+
+    def getExtractionSpcXh(self, spcids):
+        """
+        Get extraction-spc-xxh.sh
+
+        Arguments:
+        - `self`:
+        - `spcids`:
+        """
+        def _extractionStr(spcid):
+            return "$APPHOME/bin/remover.sh $site $APPHOME/etc {0} $retention\n"\
+                "$APPHOME/bin/invoker.sh $site $APPHOME/etc {0}".format(spcid)
+        
+        hourSpcids = {"01H": [], "04H": [], "08H": [], "24H": []}
+        for spcid in spcids:
+            hourSpcids[spcid[-3:]].append(spcid)
+        
+        ret = {}
+        for hour, spcids in hourSpcids.iteritems():
+            if len(spcids) > 0 :
+                ret[hour] = map(_extractionStr, spcids)
+                
+        return ret
     
 
 if __name__ == '__main__':
@@ -368,5 +390,9 @@ if __name__ == '__main__':
     # print eg.generateMakeExtractionPl('CC1700_PR02A_01H')
     # print eg.generateMakeExtractionPls(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
     # print eg.getMakeInitTableSQL(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
-    print eg.getMakeInitViewSQL(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
+    # print eg.getMakeInitViewSQL(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
+    print eg.getExtractionSpcXh(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
+
+
+
 
