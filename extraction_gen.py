@@ -219,6 +219,7 @@ class ExtractionGen(object):
         - `spcItem`:
         """
         fieldsInHead = ['alignment','gram load']
+        propNeedRwk = ['Rework', 'Rework_Only', 'Prime', 'First_Cycle_Only']
         unit = spcItem["UNIT"].lower()
         processId = spcItem["PROCESS_ID"]
         data = spcItem["DATA"]
@@ -227,7 +228,7 @@ class ExtractionGen(object):
         rwkTable = unit + '_' + processId + '_rwkcycle'
         headTable = unit + '_' + processId + '_head'
         sourceTable = 'common.{0} p'.format(procTable)
-        if 'Rework' in properties or 'Rework_Only' in properties:
+        if any(map(lambda field: field in propNeedRwk)):
             sourceTable += (' left join common.{0} c on p.hsasn=c.hsasn and p.enddate=c.enddate'.format(rwkTable))
         if any(map(lambda field: field in data, fieldsInHead)):
             sourceTable += (' left join common.{0} h on p.hsasn=h.hsasn and p.enddate=h.enddate'.format(headTable))
