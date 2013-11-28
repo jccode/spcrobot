@@ -216,17 +216,6 @@ class ExtractionGen(object):
         """
         unit = spcItem["UNIT"]
         properties = spcItem["PROPERTIES"]
-        mapping = {
-            "Rework": "typeOfHSA => 'NotNew'" if unit == 'HSA' else "typeOfHDE => 'NotPrime'",
-            "Prime": "typeOfHSA => 'New'" if unit == 'HSA' else ["typeOfHDE => 'Prime'", "firstCycleOnly => 'true'"],
-            "New_Only": "firstCycleOnly => 'true'",
-            "Latest_Data": "latestOnly => 'true'",
-            "Rework_Only": "notFirstCycleOnly => 'true'",
-            "Pass_And_Fail": "passOnly => 'false'",
-            "Test_Pass": "passOnly => 'true'",
-            "Without_HSAL": "excludeTrial => 'true'",
-            "Cycle_GT_1": "passOnly => 'false'"
-        }
         values = Set([])
 
         # if Rework_Only exist, remove Rework. Because the condition rework_only involve rework.

@@ -241,9 +241,12 @@ class SpecificationParser(object):
         else:
             pass
 
-        if "pass and fail" in targetData or "pass & fail" in targetData or "cycle > 1" in targetData or "cycle >1" in targetData:
+        if ("pass and fail" in targetData or "pass & fail" in targetData
+            or "cycle > 1" in targetData or "cycle >1" in targetData):
             properties["Pass_Only"] = False
-        elif "test pass" in targetData:
+        elif ("test pass" in targetData
+              or "only passer" in targetData or "only pass" in targetData
+              or "passer only" in targetData or "only passer" in targetData):
             properties["Pass_Only"] = True
         else:
             pass
