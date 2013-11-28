@@ -51,7 +51,8 @@ class MasterParser(object):
         """
         profiles = self.items.values()
         srcItems = filter(lambda item: item["PROFILE"] not in profileIds, profiles)
-        destItems = filter(lambda item: item["PROFILE"] in profileIds, profiles)
+        # destItems = filter(lambda item: item["PROFILE"] in profileIds, profiles)
+        destItems = self.getProfilesByProfileIds(profileIds)
 
         def _findSimilarOne(destItem):
             
@@ -61,11 +62,14 @@ class MasterParser(object):
             ret1 = filter(lambda item: item["MAPPING"] == destItem["MAPPING"]
                           and item["PLOT_UNIT"] == destItem["PLOT_UNIT"]
                           , srcItems)
-            
+
+            ld = len(destItem["PROFILE"])
             if len(ret1) > 0:
-                ret2 = map(lambda item: 20 * _dist(item, "PLOT_ITEM")
+                ret2 = map(lambda item: 40 * _dist(item, "PROCESS_ID")
+                           + 20 * _dist(item, "PLOT_ITEM")
                            + 10 * _dist(item, "OPERATION")
                            + 5 * _dist(item, "FREQUENCY")
+                           - 5 * (1 if len(item["PROFILE"]) != ld else 0)
                            , ret1)
                 ret3 = max(ret2)
                 idx = ret2.index(ret3)
@@ -76,6 +80,7 @@ class MasterParser(object):
             
         return map(_findSimilarOne, destItems)
 
+    
     def constructItems(self):
         """
         parse xls and init items
@@ -215,7 +220,7 @@ class MasterParser(object):
                 errorOccur = True
 
                 
-    def getProfile(self, spcid):
+    def getProfileBySpcid(self, spcid):
         """
         Get profile by spcid
 
@@ -227,7 +232,7 @@ class MasterParser(object):
         return filter(lambda item: item["SPCID"] == spcid, profiles)
 
 
-    def getProfiles(self, spcids):
+    def getProfilesBySpcids(self, spcids):
         """
         Get profiles 
 
@@ -235,8 +240,27 @@ class MasterParser(object):
         - `self`:
         - `spcids`:
         """
-        return map(self.getProfile, spcids)
+        return map(self.getProfileBySpcid, spcids)
 
+    def getProfileByProfileId(self, profileId):
+        """
+        Get profile by profileId
+
+        Arguments:
+        - `self`:
+        - `profileId`:
+        """
+        profiles = self.items.values()
+        return filter(lambda item: item["PROFILE"] == profileId, profiles)[0]
+
+    def getProfilesByProfileIds(self, profileIds):
+        """
+        Get profiles by profileIds
+        Arguments:
+        - `self`:
+        - `profileIds`:
+        """
+        return map(self.getProfileByProfileId, profileIds)
     
     def flatOutputItems(self):
         """
@@ -268,9 +292,14 @@ def test():
     masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.2.xls'
     mp = MasterParser(masterFile)
     # mp.flatOutputItems()
-    # print mp.getProfile('ET1985_PR01A_01H')
-    # print mp.getProfiles(['ET1985_PR01A_01H', 'MB3700_PR01A_01H'])
-    print mp.findSimilar(['DT3600_ER02_08H'])
+    # print mp.getProfileBySpcid('ET1985_PR01A_01H')
+    # print mp.getProfilesBySpcids(['ET1985_PR01A_01H', 'MB3700_PR01A_01H'])
+    
+    # similars = mp.findSimilar(['DT3100_PR01_08H', 'DT3100_YD01_08H', 'DT3600_ER02_08H'])
+    # similars2 = mp.findSimilar(['DT3100_PR01_08H', 'DT3600_ER02_08H'])
+    # print map(lambda item: item["PROFILE"], similars)
+    # print map(lambda item: item["PROFILE"], similars2)
+    
     # print mp.findSimilar(['ET1985_PR01_01H', 'MB3700_PR01_01H'])
     # mp.outputMapping()
 
@@ -288,8 +317,9 @@ def main():
     profileIds = [line.strip() for line in open(profileIdInput)]
 
     mp = MasterParser(masterFile)
+    similars = mp.findSimilar(profileIds)
+    
     with open(outputFile, 'w') as f:
-        retItems = mp.findSimilar(profileIds)
         f.write('load profile to be process\n')
         f.write(SEPERATOR)
         f.write("\n".join(profileIds))
@@ -298,7 +328,7 @@ def main():
         f.write('similar profile\n')
         f.write(SEPERATOR)
         for i in range(len(profileIds)):
-            f.write("{0}    similar profile is: {1}\n".format(profileIds[i], retItems[i]["PROFILE"]) )
+            f.write("{0}    similar profile is: {1}\n".format(profileIds[i], similars[i]["PROFILE"]) )
         f.write("\n")
         
     

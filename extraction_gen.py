@@ -111,7 +111,8 @@ class ExtractionGen(object):
         For each spcid in spcids will return a list
         """
         srcItems = filter(lambda item: item["SPCID"] not in spcids, self.specParser.items)
-        destItems = filter(lambda item: item["SPCID"] in spcids, self.specParser.items)
+        # destItems = filter(lambda item: item["SPCID"] in spcids, self.specParser.items)
+        destItems = self.specParser.getSpcids(spcids)
 
         def _findSimilarOne(descItem):
             ret1 = filter(lambda item: item["CHART_TYPE"] == descItem["CHART_TYPE"]
