@@ -283,8 +283,7 @@ class ExtractionGen(object):
                 s = "excludeInlineRetest => 'true'" if v else "excludeInlineRetest => 'false'"
                 
             elif k == "Exclude_Ship_Return":
-                if not v:
-                    s = "excludeShipReturn => 'false'"
+                s = "excludeShipReturn => 'true'" if v else "excludeShipReturn => 'false'"
                 
             else:
                 pass

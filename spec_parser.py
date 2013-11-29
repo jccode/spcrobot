@@ -225,8 +225,15 @@ class SpecificationParser(object):
         - `plotUnit`:
         """
         properties = {}
-        if "rework" in plotUnit or "rework" in targetData:
+        if "include rework" in targetData:
+            properties["Exclude_Ship_Return"] = False
+        elif "exclude rework" in targetData:
+            properties["Exclude_Ship_Return"] = True
+        elif "rework" in plotUnit or "rework" in targetData:
             properties['Rework'] = True
+        else:
+            pass
+            
         if "prime" in plotUnit or "prime" in targetData:
             properties["Prime"] = True
         if "latest" in targetData:
@@ -268,8 +275,7 @@ class SpecificationParser(object):
         else:
             pass
             
-        if "include rework" in targetData or "customer return" in targetData:
-            properties["Exclude_Ship_Return"] = False
+        
             
         return properties
             
