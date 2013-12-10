@@ -48,7 +48,18 @@ class SpcRobot(object):
         - `self`:
         """
         return self.extraGen.generateMakeExtractionPls(self.spcids)
-        
+
+    def getMakeLoaderInis(self, spcids):
+        """
+        Get makeLoaderIni.pl
+        Arguments:
+        - `self`:
+        - `spcids`:
+        """
+        def _makeLoaderIniOneRow(spcid):
+            return "&writeINI( { loaderBaseName => '%s', types => [ 'NONE' ], freq => [ '%s' ]});" % (spcid[:11], spcid[-3:])
+
+        return map(_makeLoaderIniOneRow, spcids)
         
     def out(self):
         """
@@ -63,6 +74,8 @@ class SpcRobot(object):
             self._out_makeInitView(f)
             self._out_makeExtractionPl(f)
             self._out_extraction_xh(f)
+            self._out_makeLoaderIni(f)
+            self._out_runHDDLoader(f)
             
 
     def _out_spcids(self, f):
@@ -183,7 +196,60 @@ class SpcRobot(object):
             f.write(hour+"\n")
             f.write("-------------\n")
             f.write("\n\n".join(rets))
+        f.write("\n\n")
+
+    def _out_makeLoaderIni(self, f):
+        """
+        Arguments:
+        - `self`:
+        - `f`:
+        """
+        f.write('makeLoaderIni.pl\n')
+        f.write(self.SEPERATOR)
+        f.write("\n".join(self.getMakeLoaderInis(self.spcids)))
+        f.write("\n\n")
+
+    def _out_runHDDLoader(self, f):
+        """
+        """
+        spcItems = self.specParser.getSpcids(self.spcids)
+        ret = {"GSP":[], "SGP":[], "PRB":[]}
+        for spcItem in spcItems:
+            spcid = spcItem["SPCID"]
+            hour = spcid[-3:]
+            profileId = spcid[:11] + '_' + hour
+            sites = spcItem["SITE"]
+            for site in sites:
+                ret[site].append((hour, profileId))
+
+        f.write('RunHDDLoader_xxx.bat\n')
+        f.write(self.SEPERATOR)
         
+        for site, tupList in ret.iteritems():
+            if len(tupList) > 0:
+                f.write(site+"\n")
+                f.write("--------------\n")
+                
+                outputMap = {}
+                tupList.sort()
+                for tup in tupList:
+                    if tup[0] not in outputMap:
+                        outputMap[tup[0]] = []
+                    else:
+                        outputMap[tup[0]].append(tup[1])
+
+                # output
+                for hour, spcids in outputMap.iteritems():
+                    f.write(hour+"\n")
+                    f.write("-------\n")
+                    f.write( "\n".join(map(lambda spcid: "%javabindir%java mpc.webspc2.dataextract.DataExtract e:\spclds\etc\{0}.ini".format(spcid), spcids)) )
+                    f.write("\n")
+
+            f.write("\n")
+        # end for
+
+        f.write("\n\n")
+
         
         
 def main():

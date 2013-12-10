@@ -311,7 +311,7 @@ def main():
     """
     """
     SEPERATOR = '=================================\n'
-    masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.2.xls'
+    masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.3.xls'
     profileIdInput = 'profileIds.txt'
     outputFile = 'master_out.txt'
     profileIds = [line.strip() for line in open(profileIdInput)]
@@ -328,7 +328,10 @@ def main():
         f.write('similar profile\n')
         f.write(SEPERATOR)
         for i in range(len(profileIds)):
-            f.write("{0}    similar profile is: {1}\n".format(profileIds[i], similars[i]["PROFILE"]) )
+            if similars[i]:
+                f.write("{0}    similar profile is: {1}\n".format(profileIds[i], similars[i]["PROFILE"]) )
+            else:
+                f.write("{0}    has no similar profile\n".format(profileIds[i]) )
         f.write("\n")
         
     
