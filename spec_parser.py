@@ -261,7 +261,8 @@ class SpecificationParser(object):
         else:
             pass
 
-        if "without hsat" in targetData or "without hddt" in targetData or "exclude trial unit" in targetData:
+        if ("without hsat" in targetData or "without hddt" in targetData
+            or "exclude trial unit" in targetData or "without hdd trial" in targetData):
             properties["Exclude_Trial"] = True
         elif "with hsat" in targetData or "with hddt" in targetData or "include trial unit" in targetData:
             properties["Exclude_Trial"] = False

@@ -196,6 +196,7 @@ class SpcRobot(object):
             f.write(hour+"\n")
             f.write("-------------\n")
             f.write("\n\n".join(rets))
+            f.write("\n\n")
         f.write("\n\n")
 
     def _out_makeLoaderIni(self, f):

@@ -3,7 +3,7 @@
 # input files
 # ####################
 
-CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C144/'
+CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C146_7_8/'
 
 SPECIFICATION_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.1_jc.xls'
 MASTER_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.1.xlsx'
