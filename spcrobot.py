@@ -6,7 +6,7 @@
 
 import spec_parser as sp
 import extraction_gen as eg
-
+import settings as S
 
 class SpcRobot(object):
     """
@@ -24,7 +24,7 @@ class SpcRobot(object):
         self._spcidsFile = spcidsFile
         self._specFile = specFile
         self._extractionXmlFile = extractionXmlFile
-        self.outputFile = 'out.txt'
+        self.outputFile = S.MAIN_OUT
         self.spcids = [line.strip() for line in open(spcidsFile)]
         self.specParser = sp.SpecificationParser(specFile)
         self.extraGen = eg.ExtractionGen(specFile, extractionXmlFile)
@@ -256,14 +256,7 @@ def main():
     """
     main
     """
-    inputFile = 'spcids.txt'
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C144/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.1_jc.xls'
-    extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
-    # specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    # extractionFile = 'extraction.xml'
-    
-    sr = SpcRobot(inputFile, specificationXls, extractionFile)
+    sr = SpcRobot(S.SPCIDS_FILE, S.SPECIFICATION_XLS, S.EXTRACTION_FILE)
     # print sr.spcids
     # print sr.getExtraFields()
     sr.out()

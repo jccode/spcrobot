@@ -381,83 +381,14 @@ class ExtractionGen(object):
         return ret
     
 
-class EvidenceGen(object):
-    """
-    """
-    SQL_SELECT="select plotts,spcid,paramid,modelid,datacount,ratio,storets"
-    SQL_ORDERBY=" order by modelid,paramid,plotts"
-    
-    def __init__(self, specFile, sqlretDir):
-        """
-        
-        Arguments:
-        - `spcidsFile`:
-        - `sqlretDir`:
-        """
-        self._sqlretDir = os.path.normpath(sqlretDir)
-        self.specParser = sp.SpecificationParser(specFile)
-        self.typesNeedShowView = ['Error-Ratio', 'Combined-Error-Ratio', 'Defective', 'Total-Defective']
-
-
-    def getEvidence(self, spcid):
-        """
-        Arguments:
-        - `self`:
-        - `spcid`:
-        """
-        spcItem = self.specParser.getSpcid(spcid)
-        chartType = spcItem["CHART_TYPE"]
-        extraField = self.specParser.getExtraField(spcid)[1]
-        table = spcid[:11] + spcid[12:]
-        sqlForTable = self.SQL_SELECT + extraField + " from PLOT." + table + self.SQL_ORDERBY
-        sqlForView = self.SQL_SELECT + extraField + " from SPC." + table + self.SQL_ORDERBY
-        ret = "SPCID:\t\t {0} \nPlot Table Name:\t\t PLOT.{1} \n\n\n\n\n\n\n\n\n\n\n\n\n"\
-              "Sample Records from SPCDB: \n\n\n"\
-              "db2 \"{2}\"".format(spcid, table, sqlForTable)
-        ret += ("\n" + self.getSQLRet(spcid, 'table'))
-        
-        if chartType in self.typesNeedShowView:
-            ret += "\n\n\ndb2 \"%s\"" % sqlForView
-            ret += ('\n' + self.getSQLRet(spcid, 'view'))
-        return ret
-
-
-    def getEvidences(self, spcids):
-        """
-        """
-        return map(self.getEvidence, spcids)
-
-
-    def getSQLRet(self, spcid, type):
-        """
-        
-        Arguments:
-        - `self`:
-        - `type`: should be 'table' or 'view'
-        - `spcid`:
-        """
-        sqlretfile = "sqlret_{0}_{1}.txt".format(type, spcid)
-
-        with open(self._sqlretDir + "/" + sqlretfile, 'r') as retfile:
-            return retfile.read()
-        
 
     
 if __name__ == '__main__':
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C140_C141_C142/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    extractionFile = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml'
-    # specificationXls = 'HDD SPC Monitoring Parameter Specification rev.4.0_jc.xls'
-    # extractionFile = 'extraction.xml'
-    eg = ExtractionGen(specificationXls, extractionFile)
+    eg = ExtractionGen(S.SPECIFICATION_XLS, S.EXTRACTION_FILE)
     # print eg.getFetcherExtractors(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
     # print eg.generateMakeExtractionPl('CC1700_PR02A_01H')
     # print eg.generateMakeExtractionPls(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
     # print eg.getMakeInitTableSQL(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
     # print eg.getMakeInitViewSQL(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
-    # print eg.getExtractionSpcXh(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
+    print eg.getExtractionSpcXh(['CC1700_PR02A_01H','CC1985_PR01A_01H'])
     
-    eviGen = EvidenceGen(S.SPECIFICATION_XLS, S.SQLRET_DIR)
-    print eviGen.getEvidences(['ET6400_ER04A_24H'])
-
-

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from xlrd import open_workbook
-
+import settings as S
 
 class MasterParser(object):
     """

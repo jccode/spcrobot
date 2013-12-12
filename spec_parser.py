@@ -48,6 +48,7 @@ class SpecificationParser(object):
         return filter(lambda item: item["SPCID"] == spcid, self.items)[0]
 
 
+
     def getSpcids(self, spcids):
         """
         Get items by spcids
@@ -84,6 +85,8 @@ class SpecificationParser(object):
             field += (',' + mapping[unit])
         if chartType == 'Mean-Sigma':
             field += ',AVG,STD'
+        else:
+            field += ",RATIO"
         return (spcItem['SPCID'], field)
         
 

@@ -4,6 +4,7 @@ from sets import Set
 import spec_parser as sp
 import ConfigParser
 import ibm_db
+import settings as S
 
 class ModelSetGen(object):
     """
@@ -80,7 +81,7 @@ class ModelSetGen(object):
 
 def outputModelset(dsFile, spcidsFile, specXlsFile):
     SEPERATOR = '=================================\n'
-    outputFile = "modelset_out.txt"
+    outputFile = S.MODELSET_OUT
     spcids = [line.strip() for line in open(spcidsFile)]
     specParser = sp.SpecificationParser(specXlsFile)
     spcItems = specParser.getSpcids(spcids)
@@ -100,11 +101,12 @@ def outputModelset(dsFile, spcidsFile, specXlsFile):
 
 
 def main():
-    spcidsFile = "spcids.txt"
-    datasource = "datasource.ini"
-    specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C144/'\
-                       'HDD SPC Monitoring Parameter Specification rev.4.1_jc.xls'
-    outputModelset(datasource, spcidsFile, specificationXls)
+    # spcidsFile = "spcids.txt"
+    # datasource = "datasource.ini"
+    # specificationXls = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C144/'\
+    #                    'HDD SPC Monitoring Parameter Specification rev.4.1_jc.xls'
+    # outputModelset(datasource, spcidsFile, specificationXls)
+    outputModelset(S.DATASOURCE_FILE, S.SPCIDS_FILE, S.SPECIFICATION_XLS)
 
 
 if __name__ == '__main__':
