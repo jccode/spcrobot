@@ -261,7 +261,7 @@ class ExtractionGen(object):
                 s = "typeOfHSA => 'NotNew'" if unit == 'HSA' else "typeOfHDE => 'NotPrime'"
                 
             elif k == "Prime" and v:
-                s = "typeOfHSA => 'New'" if unit == 'HSA' else ["typeOfHDE => 'Prime'", "firstCycleOnly => 'true'"]
+                s = ["typeOfHSA => 'New'" if unit == 'HSA' else "typeOfHDE => 'Prime'", "firstCycleOnly => 'true'"]
                 
             elif k == "Latest_Data" and v:
                 s = "latestOnly => 'true'"

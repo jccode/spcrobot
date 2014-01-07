@@ -310,10 +310,10 @@ def test():
 def main():
     """
     """
-    SEPERATOR = '=================================\n'
-    masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.3.xls'
-    profileIdInput = 'profileIds.txt'
-    outputFile = 'master_out.txt'
+    SEPERATOR = '=================================\n' 
+    masterFile = S.MASTER_XLS   # 'C050_HDDWebSPC2_SPCID_Master_List_3.3.xls'
+    profileIdInput = S.MASTER_PROFILEIDS_FILE # 'profileIds.txt'
+    outputFile = S.MASTER_OUT                 # 'master_out.txt'
     profileIds = [line.strip() for line in open(profileIdInput)]
 
     mp = MasterParser(masterFile)
