@@ -3,10 +3,10 @@
 # input files
 # ####################
 
-CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C146_7_8/'
+CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C144a/'
 
-SPECIFICATION_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.1_jc.xls'
-MASTER_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.1.xlsx'
+SPECIFICATION_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.2a.xlsx'
+MASTER_XLS = CR_FOLDER + 'C050_HDDWebSPC2_SPCID_Master_List_3.4.xls'
 
 EXTRACTION_FILE = "d:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml"
 

@@ -280,9 +280,9 @@ class MasterParser(object):
         """
         for spcItem in self.items.itervalues():
             try:
-                print spcItem["PROFILE"], "\t\t", spcItem["MAPPING"]
+                print spcItem["PROFILE"], "\t\t\t ", spcItem["MAPPING"]
             except KeyError as e:
-                print spcItem["PROFILE"], " has not keys"
+                print spcItem["PROFILE"], "\t\t\t has not keys"
 
 
                 

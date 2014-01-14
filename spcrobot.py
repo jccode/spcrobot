@@ -236,8 +236,7 @@ class SpcRobot(object):
                 for tup in tupList:
                     if tup[0] not in outputMap:
                         outputMap[tup[0]] = []
-                    else:
-                        outputMap[tup[0]].append(tup[1])
+                    outputMap[tup[0]].append(tup[1])
 
                 # output
                 for hour, spcids in outputMap.iteritems():
