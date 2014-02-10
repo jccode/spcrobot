@@ -45,7 +45,11 @@ class SpecificationParser(object):
         - `self`:
         - `spcid`:
         """
-        return filter(lambda item: item["SPCID"] == spcid, self.items)[0]
+        rets = filter(lambda item: item["SPCID"] == spcid, self.items)
+        if(len(rets) == 0):
+            raise Exception('Cannot find {0} spcid.'.format(spcid))
+        else:
+            return rets[0];
 
 
 
@@ -337,7 +341,7 @@ class SpecificationParser(object):
         elif "yield" in chartTypeValue:
             chartTypeRet = "Yield"
 
-        elif "p-chart" in chartTypeValue:
+        elif "p-chart" in chartTypeValue or "p chart" in chartTypeValue:
 
             if "yield" in dataValue: # yield
                 chartTypeRet = "Yield"
