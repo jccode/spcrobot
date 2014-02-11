@@ -6,7 +6,7 @@
 CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C159/'
 
 SPECIFICATION_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.4_jc.xls'
-MASTER_XLS = CR_FOLDER + 'C050_HDDWebSPC2_SPCID_Master_List_3.4a.xls'
+MASTER_XLS = CR_FOLDER + 'C050_HDDWebSPC2_SPCID_Master_List_3.5.xls'
 
 EXTRACTION_FILE = "d:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml"
 

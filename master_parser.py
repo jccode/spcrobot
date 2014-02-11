@@ -37,7 +37,8 @@ class MasterParser(object):
     
     def __init__(self, masterFile):
         self._masterFile = masterFile
-        self.items = {}         # spcItems. key:spcid, value:spcItem
+        self.items = {}         # spcItems. key:profile, value:spcItem
+        self.spcidItems = []    # list: spcItems in "SPCID" sheet. 
         self.constructItems()
 
 
@@ -152,6 +153,7 @@ class MasterParser(object):
                 item["OPERATION"] = operations[j][5:]
                 
                 self.items[profile] = item
+                self.spcidItems.append(item)
 
             
     def __fromSheetWebspc2(self, sheet):
@@ -283,13 +285,30 @@ class MasterParser(object):
                 print spcItem["PROFILE"], "\t\t\t ", spcItem["MAPPING"]
             except KeyError as e:
                 print spcItem["PROFILE"], "\t\t\t has not keys"
-
-
                 
+    def checkProfilesExist(self, spcids):
+        """
+        Check the profileIds related to spcid whether exist.
+        Arguments:
+        - `spcids`:
+        """
+        srcItems = filter(lambda item: item["SPCID"] not in spcids, self.spcidItems)
+        # print srcItems
+        ret = []
+        for spcid in spcids:
+            profile = spcid[:11] + spcid[12:]
+            exist = len(filter(lambda item: item["PROFILE"] == profile, srcItems)) > 0
+            ret.append((spcid, profile, exist))
+        return ret
+        
+    
+    
 def test():
     """
     """
-    masterFile = 'C050_HDDWebSPC2_SPCID_Master_List_3.2.xls'
+    masterFile = S.MASTER_XLS
+    spcidFile = S.SPCIDS_FILE
+    spcids = [line.strip() for line in open(spcidFile)]
     mp = MasterParser(masterFile)
     # mp.flatOutputItems()
     # print mp.getProfileBySpcid('ET1985_PR01A_01H')
@@ -302,37 +321,71 @@ def test():
     
     # print mp.findSimilar(['ET1985_PR01_01H', 'MB3700_PR01_01H'])
     # mp.outputMapping()
+    print mp.checkProfilesExist(spcids)
 
 
+
+# ----------    
+# 
+# ----------
+
+SEPERATOR = '=================================\n'
+
+def _out_check_exist(f, tupleList):
+    """
+    Arguments:
+    - `f`:
+    - `tupleList`:
+    """
+    f.write('spcids need to be processed\n')
+    f.write(SEPERATOR)
+    f.write('      spcid             profileId         exist?    \n')
+    f.write('-------------------  ----------------- ----------- \n')
+    for tupleItem in tupleList:
+        f.write(tupleItem[0] + "\t" + tupleItem[1] + "\t" + str(tupleItem[2]) + "\n")
+    f.write('\n\n')
     
 
+def _out_similars(f, profileIds, similars):    
+    f.write('similar profile\n')
+    f.write(SEPERATOR)
+    for i in range(len(profileIds)):
+        if similars[i]:
+            f.write("{0}    similar profile is: {1}\n".format(profileIds[i], similars[i]["PROFILE"]) )
+        else:
+            f.write("{0}    has no similar profile\n".format(profileIds[i]) )
+    f.write("\n")
+    
     
 def main():
     """
     """
-    SEPERATOR = '=================================\n' 
+    
     masterFile = S.MASTER_XLS   # 'C050_HDDWebSPC2_SPCID_Master_List_3.3.xls'
-    profileIdInput = S.MASTER_PROFILEIDS_FILE # 'profileIds.txt'
     outputFile = S.MASTER_OUT                 # 'master_out.txt'
-    profileIds = [line.strip() for line in open(profileIdInput)]
+    
+    # profileIdInput = S.MASTER_PROFILEIDS_FILE # 'profileIds.txt'
+    # profileIds = [line.strip() for line in open(profileIdInput)]
+    
+    spcidFile = S.SPCIDS_FILE
+    spcids = [line.strip() for line in open(spcidFile)]
 
     mp = MasterParser(masterFile)
+
+    tupleList = mp.checkProfilesExist(spcids)
+    profileIds = [item[1] for item in tupleList if not item[2]]
     similars = mp.findSimilar(profileIds)
     
     with open(outputFile, 'w') as f:
+        _out_check_exist(f, tupleList)
+        
         f.write('load profile to be process\n')
         f.write(SEPERATOR)
         f.write("\n".join(profileIds))
         f.write("\n\n")
+        
+        _out_similars(f, profileIds, similars)
 
-        f.write('similar profile\n')
-        f.write(SEPERATOR)
-        for i in range(len(profileIds)):
-            if similars[i]:
-                f.write("{0}    similar profile is: {1}\n".format(profileIds[i], similars[i]["PROFILE"]) )
-            else:
-                f.write("{0}    has no similar profile\n".format(profileIds[i]) )
-        f.write("\n")
         
     
 if __name__ == '__main__':
