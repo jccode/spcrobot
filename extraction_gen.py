@@ -70,7 +70,10 @@ class ExtractionGen(object):
         site = "[ 'FUJ', " + (", ".join(map(lambda x: "'" + x + "'" , spcItem["SITE"]))) + "]"
         tpl = ''
         if spcItem["CHART_TYPE"] == 'Combined-Error-Ratio':
-            tpl += "**** WARNNING *****====> {0} is Combined. please manually correct it.".format(spcid)
+            tpl += "**** WARNNING *****====> {0} is Combined. please manually correct it.\n".format(spcid)
+        if self.isByAsmDate(spcItem):
+            tpl += "**** WARNNING *****====> {0} is ByAsmDate. please manually correct it.(remove excludeInlineRetest from properties)\n".format(spcid)
+        
         tpl += "&write( { spcIdBase => '" + spcid[:-4] + "', \n" \
               "	  freq => [ '" + spcItem["FREQUENCY"] + "' ],\n" \
               "	  source => [ 'spcdcs' ],\n" \
@@ -310,6 +313,14 @@ class ExtractionGen(object):
         
         return values
 
+    def isByAsmDate(self, spcItem):
+        """
+        Is By Asm Date
+        Arguments:
+        - `self`:
+        - `spcItem`:
+        """
+        return "Asm_Date" in spcItem["PROPERTIES"]
 
     def getMakeInitTableSQL(self, spcids):
         """

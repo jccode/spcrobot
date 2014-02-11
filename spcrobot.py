@@ -260,6 +260,7 @@ def main():
     # print sr.spcids
     # print sr.getExtraFields()
     sr.out()
+    # print sr.specParser.items
 
     
 if __name__ == '__main__':

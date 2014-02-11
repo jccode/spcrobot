@@ -224,7 +224,7 @@ class SpecificationParser(object):
 
     def _detectProperties(self, targetData, plotUnit):
         """
-        PROPERTIES: Rework, Prime, Latest_Data, Rework_Only, First_Cycle_Only, Pass_Only, Without_HSAL, Filter_Fail, Exclude_Trial, Exclude_Inline_Retest, Exclude_Ship_Return
+        PROPERTIES: Rework, Prime, Latest_Data, Rework_Only, First_Cycle_Only, Pass_Only, Without_HSAL, Filter_Fail, Exclude_Trial, Exclude_Inline_Retest, Exclude_Ship_Return, Asm_Date
 
         Arguments:
         - `self`:
@@ -232,23 +232,39 @@ class SpecificationParser(object):
         - `plotUnit`:
         """
         properties = {}
+
+        reworkFlag = False
         if "include rework" in targetData:
             properties["Exclude_Ship_Return"] = False
+            reworkFlag = True
         elif "exclude rework" in targetData:
             properties["Exclude_Ship_Return"] = True
-        elif "rework" in plotUnit or "rework" in targetData:
-            properties['Rework'] = True
+            reworkFlag = True
         else:
             pass
-            
+
+        primeFlag = False
         if "prime" in plotUnit or "prime" in targetData:
             properties["Prime"] = True
-        if "latest" in targetData:
+            primeFlag = True
+        
+        if not primeFlag:
+            if "rework" in plotUnit:
+                properties['Rework'] = True
+            elif (not reworkFlag) and "rework" in targetData:
+                properties['Rework'] = True
+            elif reworkFlag and targetData.count('rework') > 2:
+                properties['Rework'] = True
+            else:
+                pass
+
+        
+        if "latest" in targetData or "lastest" in targetData:
             properties["Latest_Data"] = True
         if "rework only" in targetData:
             properties["Rework_Only"] = True
             
-        if "new only" in targetData or "cycle 1" in targetData:
+        if "new only" in targetData or "cycle 1" in targetData or "cycle only" in targetData:
             properties["First_Cycle_Only"] = True
         elif "include rework" in targetData or "include retest" in targetData:
             properties["First_Cycle_Only"] = False
@@ -285,7 +301,8 @@ class SpecificationParser(object):
         else:
             pass
             
-        
+        if "asm date" in targetData:
+            properties["Asm_Date"] = True
             
         return properties
             
