@@ -265,11 +265,13 @@ class SpecificationParser(object):
         else:
             pass
 
-        if ("without hsat" in targetData or "without hddt" in targetData
-            or "exclude trial unit" in targetData or "without hdd trial" in targetData):
-            properties["Exclude_Trial"] = True
-        elif "with hsat" in targetData or "with hddt" in targetData or "include trial unit" in targetData:
+        if ("with hsat" in targetData or "with hddt" in targetData
+            or "include trial unit" in targetData):
             properties["Exclude_Trial"] = False
+        elif ("without hsat" in targetData or "without hddt" in targetData
+              or "exclude trial unit" in targetData or "without hdd trial" in targetData
+              or "trial" in targetData):
+            properties["Exclude_Trial"] = True
         else:
             pass
 
@@ -307,8 +309,8 @@ class SpecificationParser(object):
             plotUnits.add("ByTester")
 
         # For others, "by" should ahead of the type.
-        if "by" not in plotUnit:
-            return plotUnits
+        # if "by" not in plotUnit:
+        #     return plotUnits
         
         if "line" in plotUnit:
             plotUnits.add("ByLine")

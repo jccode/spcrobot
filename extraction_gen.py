@@ -117,9 +117,20 @@ class ExtractionGen(object):
         destItems = self.specParser.getSpcids(spcids)
 
         def _findSimilarOne(descItem):
-            ret1 = filter(lambda item: item["CHART_TYPE"] == descItem["CHART_TYPE"]
+
+            def _chartTypeEquals(item):
+                equalsChartTypes = ['Defective', 'Total-Defective']
+                if item["CHART_TYPE"] == descItem["CHART_TYPE"]:
+                    return True
+                elif item["CHART_TYPE"] in equalsChartTypes and descItem["CHART_TYPE"] in equalsChartTypes:
+                    return True
+                else:
+                    return False
+            
+            ret1 = filter(lambda item: _chartTypeEquals(item)
                           and item["PLOT_UNIT"] == descItem["PLOT_UNIT"]
-                          and item["PROCESS_NAME"] == descItem["PROCESS_NAME"], srcItems)
+                          and (item["PROCESS_NAME"] == descItem["PROCESS_NAME"]
+                               or item["PROCESS_ID"] == descItem["PROCESS_ID"]), srcItems)
             if len(ret1) > 0:
                 ret2 = filter(lambda item: item["PROCESS_ID"] == descItem["PROCESS_ID"], ret1)
                 if len(ret2) > 0:
