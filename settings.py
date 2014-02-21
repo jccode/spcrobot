@@ -17,8 +17,8 @@ DATASOURCE_FILE = "datasource.ini"
 
 # For evidence_gen.py
 
-LOG_DIR = CR_FOLDER + "log"
-SQLRET_DIR = CR_FOLDER + 'sqlret'
+LOG_DIR = CR_FOLDER + "ph2/log/"
+SQLRET_DIR = CR_FOLDER + 'ph2/sqlret/'
 UT_LOG = CR_FOLDER + 'ut.log'
 
 
