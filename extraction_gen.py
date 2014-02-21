@@ -401,7 +401,34 @@ class ExtractionGen(object):
                 ret[hour] = map(_extractionStr, spcids)
                 
         return ret
-    
+
+    def getSpcidsActualNotExist(self, spcids):
+        """
+        Get those spcids whose related table doesn't exist.
+        Arguments:
+        - `self`:
+        - `spcids`:
+        Return: 
+        - Tuple: (NotExistSpcidList, ExistSpcidList)
+        """
+        srcItems = filter(lambda item: item["SPCID"] not in spcids, self.specParser.items)
+        tableExists = []
+        tableNotExist = []
+
+        def getProfile(spcid):
+            return spcid[:11] + spcid[12:]
+
+        def ifExist(spcid):
+            ret = filter(lambda item: getProfile(item["SPCID"]) == getProfile(spcid), srcItems)
+            return len(ret) > 0
+
+        for spcid in spcids:
+            if ifExist(spcid):
+                tableExists.append(spcid)
+            else:
+                tableNotExist.append(spcid)
+
+        return (tableNotExist, tableExists)
 
 
     

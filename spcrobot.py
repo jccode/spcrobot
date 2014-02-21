@@ -60,6 +60,24 @@ class SpcRobot(object):
             return "&writeINI( { loaderBaseName => '%s', types => [ 'NONE' ], freq => [ '%s' ]});" % (spcid[:11], spcid[-3:])
 
         return map(_makeLoaderIniOneRow, spcids)
+
+
+    def findDuplicatdSpcids(self, spcids):
+        """
+        Find duplicated spcids (From profile view.)
+        Arguments:
+        - `self`:
+        Return:
+        - Tuple (duplicatedList, listWithDuplicatdRemoved)
+        """
+        profiles = map(lambda spcid: spcid[:11] + spcid[12:], spcids)
+        duplicatedProfiles = set([x for x in profiles if profiles.count(x) > 1])
+        duplicatedSpcids = []
+        for profile in duplicatedProfiles:
+            duplicatedSpcids.append( spcids[ profiles.index(profile) ] )
+        withoutDuplicateds = [spcid for spcid in spcids if spcid not in duplicatedSpcids]
+        return (duplicatedSpcids, withoutDuplicateds)
+        
         
     def out(self):
         """
@@ -165,8 +183,25 @@ class SpcRobot(object):
         """
         f.write('makeInitTableSQL.pl\n')
         f.write(self.SEPERATOR)
-        f.write( "\n".join(self.extraGen.getMakeInitTableSQL(self.spcids)) )
-        f.write("\n\n")
+
+        spcidTuple = self.extraGen.getSpcidsActualNotExist(self.spcids)
+        tableExists = spcidTuple[1]
+        if len(tableExists) > 0:
+            f.write("\n".join(map(lambda spcid: "%s 's table exist." % spcid,
+                tableExists)))
+            f.write("\n--------------\n\n")
+
+        duplicatedTuple = self.findDuplicatdSpcids(spcidTuple[0])
+        duplicatedSpcids = duplicatedTuple[0]
+            
+        if len(duplicatedSpcids) > 0:
+            f.write("\n".join(map(lambda spcid: "%s duplicated." % spcid,
+                duplicatedSpcids)))
+            f.write("\n--------------\n\n")
+        
+        f.write( "\n".join(self.extraGen.getMakeInitTableSQL(duplicatedTuple[1])) )
+        f.write("\n\n\n")
+        
         
     def _out_makeInitView(self, f):
         """
@@ -178,9 +213,26 @@ class SpcRobot(object):
         """
         f.write('makeInitViewSQL.pl\n')
         f.write(self.SEPERATOR)
-        f.write("\n".join(self.extraGen.getMakeInitViewSQL(self.spcids)))
-        f.write("\n\n")
 
+        spcidTuple = self.extraGen.getSpcidsActualNotExist(self.spcids)
+        tableExists = spcidTuple[1]
+        if len(tableExists) > 0:
+            f.write("\n".join(map(lambda spcid: "%s 's table exist." % spcid,
+                tableExists)))
+            f.write("\n--------------\n\n")
+
+        duplicatedTuple = self.findDuplicatdSpcids(spcidTuple[0])
+        duplicatedSpcids = duplicatedTuple[0]
+            
+        if len(duplicatedSpcids) > 0:
+            f.write("\n".join(map(lambda spcid: "%s duplicated." % spcid,
+                duplicatedSpcids)))
+            f.write("\n--------------\n\n")
+        
+        f.write("\n".join(self.extraGen.getMakeInitViewSQL(duplicatedTuple[1])))
+        f.write("\n\n\n")
+
+        
     def _out_extraction_xh(self, f):
         """
         Write out extraction-spc-xxh.sh
