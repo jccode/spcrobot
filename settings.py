@@ -3,10 +3,10 @@
 # input files
 # ####################
 
-CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C159/'
+CR_FOLDER = 'd:/HGST/MFG/processing/HDD_WEBSPC_CR/C165/'
 
-SPECIFICATION_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.4_jc.xls'
-MASTER_XLS = CR_FOLDER + 'C050_HDDWebSPC2_SPCID_Master_List_3.5.xls'
+SPECIFICATION_XLS = CR_FOLDER + 'HDD SPC Monitoring Parameter Specification rev.4.7.xls'
+MASTER_XLS = CR_FOLDER + 'C050_HDDWebSPC2_SPCID_Master_List_3.7.xls'
 
 EXTRACTION_FILE = "d:/HGST/MFG/processing/HDD_WEBSPC_CR/config_code/etc/extraction.xml"
 
@@ -17,8 +17,8 @@ DATASOURCE_FILE = "datasource.ini"
 
 # For evidence_gen.py
 
-LOG_DIR = CR_FOLDER + "ph2/log/"
-SQLRET_DIR = CR_FOLDER + 'ph2/sqlret/'
+LOG_DIR = CR_FOLDER + "log/"
+SQLRET_DIR = CR_FOLDER + 'sqlret/'
 UT_LOG = CR_FOLDER + 'ut.log'
 
 

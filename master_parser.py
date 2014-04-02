@@ -61,8 +61,9 @@ class MasterParser(object):
                 return 1 if item[field] == destItem[field] else 0
             
             ret1 = filter(lambda item: item["MAPPING"] == destItem["MAPPING"]
-                          and item["PLOT_UNIT"] == destItem["PLOT_UNIT"]
-                          , srcItems)
+                and item["PLOT_UNIT"] == destItem["PLOT_UNIT"]
+                and len(item['PROFILE']) == len(destItem['PROFILE'])
+                , srcItems)
 
             ld = len(destItem["PROFILE"])
             if len(ret1) > 0:
