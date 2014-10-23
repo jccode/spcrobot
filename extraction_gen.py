@@ -59,7 +59,7 @@ class ExtractionGen(object):
             # generate
             sourceTable = self.genSourceTable(spcItem)
             if spcidType == "PR" and ("parameter" in data or "parametric" in data):
-                sourceParamTable = unit.lower() + "_" + spcItem["PROCESS_ID"] + "_head"
+                sourceParamTable = unit.lower() + "_" + spcItem["PROCESS_ID"] + ("_head" if "head" in data else "_unit")
                 
         
         properties = ', '.join( self.getProperties(spcItem) )
